@@ -68,8 +68,10 @@ const iplug::igraphics::IColor NAM_3(255, 162, 178, 191); // Cadet Blue Crayola
 
 // Evan Heritage theme colors
 const iplug::igraphics::IColor NAM_0(0, 18, 17, 19); // Transparent
-const iplug::igraphics::IColor NAM_THEMECOLOR(255, 236, 7, 23); // Red
+const iplug::igraphics::IColor NAM_RED(255, 236, 7, 23); // Red
 const iplug::igraphics::IColor NAM_THEMEFONTCOLOR(255, 242, 242, 242); // Dark Ehite
+
+iplug::igraphics::IColor NAM_THEMECOLOR = NAM_RED;
 
 // Misc
 // const iplug::igraphics::IColor MOUSEOVER = NAM_3.WithOpacity(0.3);

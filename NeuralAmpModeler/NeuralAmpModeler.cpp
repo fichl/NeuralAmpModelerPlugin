@@ -86,7 +86,7 @@ const IVColorSpec inactiveColorSpec{
   COLOR_RED.WithOpacity(0.5f), // Extra 2
   DEFAULT_X3COLOR.WithOpacity(0.5f) // Extra 3
 };
-const IVStyle style =
+IVStyle style =
   IVStyle{true, // Show label
           true, // Show value
           activeColorSpec,
@@ -101,7 +101,7 @@ const IVStyle style =
           DEFAULT_SHADOW_OFFSET,
           DEFAULT_WIDGET_FRAC,
           DEFAULT_WIDGET_ANGLE};
-const IVStyle styleInactive = style.WithColors(inactiveColorSpec);
+IVStyle styleInactive = style.WithColors(inactiveColorSpec);
 
 NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 : Plugin(info, MakeConfig(kNumParams, kNumPresets))
@@ -412,14 +412,16 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     // underlaying background in theme color for ON state
     pGraphics->AttachControl(
       new IVPanelControl(ngToggleArea.GetPadded(-12.f).GetTranslated(2.f, 10.0f), "",
-                         style.WithDrawFrame(false).WithColor(kFG, PluginColors::NAM_THEMECOLOR.WithOpacity(0.9f))));
+                         style.WithDrawFrame(false).WithColor(kFG, PluginColors::NAM_THEMECOLOR.WithOpacity(0.9f))),
+      kNoTag, "themeable");
     IBSwitchControl* noiseGateSlider =
       new IBSwitchControl(ngToggleArea.GetFromTop(60.f).GetPadded(-20.f), switchBitmap, kNoiseGateActive);
     pGraphics->AttachControl(noiseGateSlider);
     // Tone stack toggle
     pGraphics->AttachControl(
       new IVPanelControl(eqToggleArea.GetPadded(-12.f).GetTranslated(2.f, 10.0f), "",
-                         style.WithDrawFrame(false).WithColor(kFG, PluginColors::NAM_THEMECOLOR.WithOpacity(0.9f))));
+                         style.WithDrawFrame(false).WithColor(kFG, PluginColors::NAM_THEMECOLOR.WithOpacity(0.9f))),
+      kNoTag, "themeable");
     IBSwitchControl* toneStackSlider =
       new IBSwitchControl(eqToggleArea.GetFromTop(60.f).GetPadded(-20.f), switchBitmap, kEQActive);
     pGraphics->AttachControl(toneStackSlider);
@@ -427,7 +429,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     // Normalisation toggle
     pGraphics->AttachControl(
       new IVPanelControl(outNormToggleArea.GetPadded(-12.f).GetTranslated(2.0f, -4.0f), "", style.WithDrawFrame(false)),
-      kOutNormPanel);
+      kOutNormPanel, "themeable");
     IBSwitchControl* outputNormSlider =
       new IBSwitchControl(outNormToggleArea.GetFromTop(32.f).GetPadded(-20.f), switchBitmap, kOutNorm);
     pGraphics->AttachControl(outputNormSlider, kOutNorm);
@@ -435,14 +437,14 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
     // The knobs
     // Input
-    pGraphics->AttachControl(new IVKnobControl(inputKnobArea, kInputLevel, "", style));
+    pGraphics->AttachControl(new IVKnobControl(inputKnobArea, kInputLevel, "", style), kNoTag, "themeable");
     pGraphics->AttachControl(
       new IBKnobRotaterControl(inputKnobArea, knobRotateBitmap, kInputLevel), kNoTag, "kInputLevel");
     // Noise gate
     const bool noiseGateIsActive = this->GetParam(kNoiseGateActive)->Value();
     const IVStyle noiseGateInitialStyle = noiseGateIsActive ? style : styleInactive;
     IVKnobControl* noiseGateControl = new IVKnobControl(noiseGateArea, kNoiseGateThreshold, "", noiseGateInitialStyle);
-    pGraphics->AttachControl(noiseGateControl);
+    pGraphics->AttachControl(noiseGateControl, kNoTag, "themeable");
     pGraphics->AttachControl(
       new IBKnobRotaterControl(noiseGateArea, knobRotateBitmap, kNoiseGateThreshold), kNoTag, "kNoiseGateThreshold");
     // Tone stack
@@ -451,15 +453,15 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     IVKnobControl* bassControl = new IVKnobControl(bassKnobArea, kToneBass, "", toneStackInitialStyle);
     IVKnobControl* middleControl = new IVKnobControl(middleKnobArea, kToneMid, "", toneStackInitialStyle);
     IVKnobControl* trebleControl = new IVKnobControl(trebleKnobArea, kToneTreble, "", toneStackInitialStyle);
-    pGraphics->AttachControl(bassControl);
-    pGraphics->AttachControl(middleControl);
-    pGraphics->AttachControl(trebleControl);
+    pGraphics->AttachControl(bassControl, kNoTag, "themeable");
+    pGraphics->AttachControl(middleControl, kNoTag, "themeable");
+    pGraphics->AttachControl(trebleControl, kNoTag, "themeable");
     pGraphics->AttachControl(new IBKnobRotaterControl(bassKnobArea, knobRotateBitmap, kToneBass), kNoTag, "kToneBass");
     pGraphics->AttachControl(new IBKnobRotaterControl(middleKnobArea, knobRotateBitmap, kToneMid), kNoTag, "kToneMid");
     pGraphics->AttachControl(
       new IBKnobRotaterControl(trebleKnobArea, knobRotateBitmap, kToneTreble), kNoTag, "kToneTreble");
     // Output
-    pGraphics->AttachControl(new IVKnobControl(outputKnobArea, kOutputLevel, "", style));
+    pGraphics->AttachControl(new IVKnobControl(outputKnobArea, kOutputLevel, "", style), kNoTag, "themeable");
     pGraphics->AttachControl(
       new IBKnobRotaterControl(outputKnobArea, knobRotateBitmap, kOutputLevel), kNoTag, "kOutputLevel");
 
@@ -506,7 +508,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                                   style.WithWidgetFrac(0.5).WithShowValue(false).WithDrawFrame(false).WithColor(
                                     kFG, PluginColors::NAM_THEMECOLOR.WithOpacity(0.4f)),
                                   EDirection::Vertical, {}, 0, meterMin, meterMax, {}),
-        kCtrlTagInputMeter)
+        kCtrlTagInputMeter, "themeable")
       ->As<IVPeakAvgMeterControl<>>()
       ->SetPeakSize(2.0f);
     pGraphics
@@ -515,9 +517,64 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                                   style.WithWidgetFrac(0.5).WithShowValue(false).WithDrawFrame(false).WithColor(
                                     kFG, PluginColors::NAM_THEMECOLOR.WithOpacity(0.4f)),
                                   EDirection::Vertical, {}, 0, meterMin, meterMax, {}),
-        kCtrlTagOutputMeter)
+        kCtrlTagOutputMeter, "themeable")
       ->As<IVPeakAvgMeterControl<>>()
       ->SetPeakSize(2.0f);
+
+    // set Theme Color
+    auto setColors = [pGraphics](int cell, IColor color) {
+      pGraphics->ForControlInGroup("themeable", [color](IControl* pControl) {
+        // pControl->As<IVectorBase>()->SetColor(static_cast<EVColor>(1), color);
+        // pControl->As<IVectorBase>()->SetColor(static_cast<EVColor>(6), color);
+        PluginColors::NAM_THEMECOLOR = color;
+        IVectorBase* pVControl = pControl->As<IVectorBase>();
+        pVControl->SetStyle(pVControl->GetStyle().WithColor(static_cast<EVColor>(1), color));
+        pVControl->SetStyle(pVControl->GetStyle().WithColor(static_cast<EVColor>(6), color));
+        pControl->SetDirty(false);
+        // there must be a elegant way to make the new color survive toggling NG and EQ, right ?
+        // and to serialize and restore the new color on restart
+        IVColorSpec new_activeColorSpec{
+          DEFAULT_BGCOLOR, // Background
+          color, // Foreground
+          color.WithOpacity(0.3f), // Pressed
+          color.WithOpacity(0.4f), // Frame
+          PluginColors::MOUSEOVER, // Highlight
+          DEFAULT_SHCOLOR, // Shadow
+          color, // Extra 1
+          COLOR_YELLOW, // Extra 2
+          DEFAULT_X3COLOR // Extra 3
+        };
+        IVColorSpec new_inactiveColorSpec{
+          DEFAULT_BGCOLOR, // Background
+          PluginColors::NAM_3.WithOpacity(0.3f), // Foreground
+          color.WithOpacity(0.3f), // Pressed
+          PluginColors::NAM_0, // Frame
+          PluginColors::NAM_0, // Highlight
+          DEFAULT_SHCOLOR.WithOpacity(0.5f), // Shadow
+          color.WithOpacity(0.5f), // Extra 1
+          COLOR_RED.WithOpacity(0.5f), // Extra 2
+          DEFAULT_X3COLOR.WithOpacity(0.5f) // Extra 3
+        };
+        style = IVStyle{true, // Show label
+                        true, // Show value
+                        new_activeColorSpec,
+                        {DEFAULT_TEXT_SIZE + 3.f, EVAlign::Middle, PluginColors::NAM_3}, // Knob label text5
+                        {DEFAULT_TEXT_SIZE + 3.f, EVAlign::Bottom, PluginColors::NAM_3}, // Knob value text
+                        DEFAULT_HIDE_CURSOR,
+                        DEFAULT_DRAW_FRAME,
+                        false,
+                        DEFAULT_EMBOSS,
+                        0.2f,
+                        2.f,
+                        DEFAULT_SHADOW_OFFSET,
+                        DEFAULT_WIDGET_FRAC,
+                        DEFAULT_WIDGET_ANGLE};
+        styleInactive = style.WithColors(new_inactiveColorSpec);
+      });
+    };
+    pGraphics->AttachControl(new IVColorSwatchControl(
+      b.GetGridCell(0, 5, 8).GetPadded(-5.).SubRectVertical(5, 2).GetTranslated(99.f, -9.f), "", setColors,
+      style.WithColor(kBG, DEFAULT_TEXT_FGCOLOR), IVColorSwatchControl::ECellLayout::kVertical, {kFG}, {" "}));
 
     //     Help/about box
     pGraphics->AttachControl(new IRolloverCircleSVGButtonControl(
