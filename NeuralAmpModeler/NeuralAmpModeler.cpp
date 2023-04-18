@@ -72,7 +72,7 @@ const IVColorSpec activeColorSpec{
   PluginColors::MOUSEOVER, // Highlight
   DEFAULT_SHCOLOR, // Shadow
   PluginColors::NAM_THEMECOLOR, // Extra 1
-  COLOR_RED, // Extra 2 --> color for clipping in meters
+  COLOR_YELLOW, // Extra 2 --> color for clipping in meters
   DEFAULT_X3COLOR // Extra 3
 };
 const IVColorSpec inactiveColorSpec{
@@ -151,6 +151,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   };
 
   mLayoutFunc = [&](IGraphics* pGraphics) {
+    this->mFolderBrowser = FolderBrowser(pGraphics);
     pGraphics->AttachCornerResizer(EUIResizerMode::Scale, false);
     pGraphics->AttachPanelBackground(COLOR_BLACK);
     pGraphics->EnableMouseOver(true);
@@ -267,9 +268,28 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                     "https://github.com/sdatkinson/nam-model-utility";
               pGraphics->ShowMessageBox(ss.str().c_str(), "Failed to load model!", kMB_OK);
             }
+            else
+            {
+              // init FolderBrowser upon successful selection / load
+              this->mFolderBrowser.InitializeNAMNav(fileName);
+            }
           }
         });
     };
+    // Model nav up button
+    auto namNavUp = [&, pGraphics](IControl* pCaller) {
+      this->mFolderBrowser.FinishNAMNavUp(this->_GetNAM(this->mFolderBrowser.StartNAMNavUp()));
+    };
+    // Model nav down button
+    auto namNavDown = [&, pGraphics](IControl* pCaller) {
+      this->mFolderBrowser.FinishNAMNavDown(this->_GetNAM(this->mFolderBrowser.StartNAMNavDown()));
+    };
+    // Model-clearing function
+    auto ClearNAM = [&, pGraphics](IControl* pCaller) {
+      this->mFlagRemoveNAM = true;
+      this->mFolderBrowser.HideNAMArrows();
+    };
+
     // IR loader button
     auto loadIR = [&, pGraphics](IControl* pCaller) {
       WDL_String initFileName;
@@ -315,13 +335,27 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
               }
               pGraphics->ShowMessageBox(message.str().c_str(), "Failed to load IR!", kMB_OK);
             }
+            else
+            {
+              // init FolderBrowser upon successful selection / load
+              this->mFolderBrowser.InitializeIRNav(fileName);
+            }
           }
         });
     };
-    // Model-clearing function
-    auto ClearNAM = [&, pGraphics](IControl* pCaller) { this->mFlagRemoveNAM = true; };
+    // IR nav up button
+    auto irNavUp = [&, pGraphics](IControl* pCaller) {
+      this->mFolderBrowser.FinishIRNavUp(this->_GetIR(this->mFolderBrowser.StartIRNavUp()));
+    };
+    // IR nav down button
+    auto irNavDown = [&, pGraphics](IControl* pCaller) {
+      this->mFolderBrowser.FinishIRNavDown(this->_GetIR(this->mFolderBrowser.StartIRNavDown()));
+    };
     // IR-clearing function
-    auto ClearIR = [&, pGraphics](IControl* pCaller) { this->mFlagRemoveIR = true; };
+    auto ClearIR = [&, pGraphics](IControl* pCaller) {
+      this->mFlagRemoveIR = true;
+      this->mFolderBrowser.HideIRArrows();
+    };
 
     // Graphics objects for what NAM is loaded
     const float iconWidth = fileHeight; // Square icon
@@ -331,9 +365,22 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       modelArea.GetFromLeft(iconWidth).GetPadded(-6.f).GetTranslated(-1.f, 1.f), loadNAM, fileSVG));
     pGraphics->AttachControl(
       new IRolloverSVGButtonControl(modelArea.GetFromRight(iconWidth).GetPadded(-8.f), ClearNAM, closeButtonSVG));
+    pGraphics
+      ->AttachControl(
+        new IRolloverSVGButtonControl(
+          modelArea.GetFromLeft(iconWidth).GetPadded(-10.f).GetHShifted(+(iconWidth + 20.f)), namNavUp, leftArrowSVG),
+        250)
+      ->Hide(true);
+    pGraphics
+      ->AttachControl(new IRolloverSVGButtonControl(
+                        modelArea.GetFromRight(iconWidth).GetPadded(-10.f).GetHShifted(-(iconWidth + 20.f)), namNavDown,
+                        rightArrowSVG),
+                      251)
+      ->Hide(true);
     pGraphics->AttachControl(
       new IVUpdateableLabelControl(
-        modelArea.GetReducedFromLeft(iconWidth).GetReducedFromRight(iconWidth), this->mDefaultNAMString.Get(),
+        modelArea.GetReducedFromLeft(iconWidth + 55.f).GetReducedFromRight(iconWidth + 55.f),
+        this->mDefaultNAMString.Get(),
         style.WithDrawFrame(false).WithValueText(style.valueText.WithSize(16.f).WithVAlign(EVAlign::Middle))),
       kCtrlTagModelName);
     // IR
@@ -343,9 +390,21 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       irArea.GetFromLeft(iconWidth).GetPadded(-6.f).GetTranslated(-1.f, 1.f), loadIR, fileSVG));
     pGraphics->AttachControl(
       new IRolloverSVGButtonControl(irArea.GetFromRight(iconWidth).GetPadded(-8.f), ClearIR, closeButtonSVG));
+    pGraphics
+      ->AttachControl(
+        new IRolloverSVGButtonControl(
+          irArea.GetFromLeft(iconWidth).GetPadded(-10.f).GetHShifted(+(iconWidth + 20.f)), irNavUp, leftArrowSVG),
+        252)
+      ->Hide(true);
+    pGraphics
+      ->AttachControl(
+        new IRolloverSVGButtonControl(
+          irArea.GetFromRight(iconWidth).GetPadded(-10.f).GetHShifted(-(iconWidth + 20.f)), irNavDown, rightArrowSVG),
+        253)
+      ->Hide(true);
     pGraphics->AttachControl(
       new IVUpdateableLabelControl(
-        irArea.GetReducedFromLeft(iconWidth).GetReducedFromRight(iconWidth), this->mDefaultIRString.Get(),
+        irArea.GetReducedFromLeft(iconWidth + 55.f).GetReducedFromRight(iconWidth + 55.f), this->mDefaultIRString.Get(),
         style.WithDrawFrame(false).WithValueText(style.valueText.WithSize(16.f).WithVAlign(EVAlign::Middle))),
       kCtrlTagIRName);
 
@@ -654,9 +713,15 @@ void NeuralAmpModeler::OnUIOpen()
 {
   Plugin::OnUIOpen();
   if (this->mNAMPath.GetLength())
+  {
     this->_SetModelMsg(this->mNAMPath);
+    this->mFolderBrowser.InitializeNAMNav(this->mNAMPath); // carlo
+  }
   if (this->mIRPath.GetLength())
+  {
     this->_SetIRMsg(this->mIRPath);
+    this->mFolderBrowser.InitializeIRNav(this->mIRPath); // carlo
+  }
   if (this->mNAM != nullptr)
     this->_SetOutputNormalizationDisableState(!this->mNAM->HasLoudness());
 }

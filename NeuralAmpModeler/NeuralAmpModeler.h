@@ -7,6 +7,7 @@
 #include "NeuralAmpModelerCore/dsp/dsp.h"
 #include "NeuralAmpModelerCore/dsp/wav.h"
 
+#include <../folderBrowser/folderBrowser.h>
 #include "IPlug_include_in_plug_hdr.h"
 #include "ISender.h"
 
@@ -39,6 +40,10 @@ enum ECtrlTags
   kCtrlTagInputMeter,
   kCtrlTagOutputMeter,
   kCtrlTagAboutBox,
+  //kCtrlTagNAMNavUp, // carlo
+  //kCtrlTagNAMNavDown, // carlo
+  //kCtrlTagIRNavUp, // carlo
+  //kCtrlTagIRNavDown, // carlo
   kNumCtrlTags
 };
 
@@ -162,6 +167,8 @@ private:
   WDL_String mNAMPath;
   // Path to IR (.wav file)
   WDL_String mIRPath;
+  // access folder browser
+  NeuralAmpModeler::FolderBrowser mFolderBrowser; // carlo
 
   std::unordered_map<std::string, double> mNAMParams = {{"Input", 0.0}, {"Output", 0.0}};
 
