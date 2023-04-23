@@ -40,10 +40,10 @@ enum ECtrlTags
   kCtrlTagInputMeter,
   kCtrlTagOutputMeter,
   kCtrlTagAboutBox,
-  //kCtrlTagNAMNavUp, // carlo
-  //kCtrlTagNAMNavDown, // carlo
-  //kCtrlTagIRNavUp, // carlo
-  //kCtrlTagIRNavDown, // carlo
+  // kCtrlTagNAMNavUp, // carlo
+  // kCtrlTagNAMNavDown, // carlo
+  // kCtrlTagIRNavUp, // carlo
+  // kCtrlTagIRNavDown, // carlo
   kNumCtrlTags
 };
 
@@ -174,4 +174,7 @@ private:
 
   iplug::IPeakAvgSender<> mInputSender;
   iplug::IPeakAvgSender<> mOutputSender;
+
+  // theme color
+  int mThemeColor;
 };
