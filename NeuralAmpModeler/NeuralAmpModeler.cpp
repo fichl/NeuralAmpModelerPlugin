@@ -110,6 +110,8 @@ const IVStyle styleInactive = style.WithColors(inactiveColorSpec);
 bool ngActive = 1;
 bool eqActive = 1;
 
+bool settingsHidden = 1;
+
 NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 : Plugin(info, MakeConfig(kNumParams, kNumPresets))
 , mInputPointers(nullptr)
@@ -144,6 +146,9 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   this->GetParam(kNoiseGateActive)->InitBool("NoiseGateActive", true);
   this->GetParam(kEQActive)->InitBool("ToneStack", true);
   this->GetParam(kOutNorm)->InitBool("OutNorm", false);
+  this->GetParam(kBassFrequency)->InitDouble("BassFrequency", 150.0, 20.0, 300.0, 0.5);
+  this->GetParam(kMidFrequency)->InitDouble("MiddleFrequency", 425.0, 300.0, 800.0, 0.5);
+  this->GetParam(kTrebleFrequency)->InitDouble("TrebleFrequency", 1800.0, 800.0, 3200.0, 0.5);
 
   this->mNoiseGateTrigger.AddListener(&this->mNoiseGateGain);
 
@@ -165,6 +170,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     pGraphics->EnableMouseOver(true);
     auto helpSVG = pGraphics->LoadSVG(HELP_FN);
     auto fileSVG = pGraphics->LoadSVG(FILE_FN);
+    auto settingsSVG = pGraphics->LoadSVG(SETTINGS_FN);
     auto closeButtonSVG = pGraphics->LoadSVG(CLOSE_BUTTON_FN);
     auto rightArrowSVG = pGraphics->LoadSVG(RIGHT_ARROW_FN);
     auto leftArrowSVG = pGraphics->LoadSVG(LEFT_ARROW_FN);
@@ -440,7 +446,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     pGraphics->AttachControl(
       new IBKnobRotaterControl(inputKnobArea, knobRotateBitmap, kInputLevel), kNoTag, "kInputLevel");
     // Noise gate
-    const bool noiseGateIsActive = GetParam(kNoiseGateActive)->Value();
+    const bool noiseGateIsActive = this->GetParam(kNoiseGateActive)->Value();
     const IVStyle noiseGateInitialStyle = noiseGateIsActive
                                             ? style.WithColor(kFG, NAM_THEMECOLOR).WithColor(kX1, NAM_THEMECOLOR)
                                             : styleInactive.WithColor(kFG, NAM_THEMECOLOR.WithOpacity(0.3f))
@@ -541,6 +547,38 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       ->As<IVPeakAvgMeterControl<>>()
       ->SetPeakSize(2.0f);
 
+    // frequency Sliders
+    auto sliderBG = pGraphics->LoadBitmap(SLIDER_BG_FN);
+    pGraphics
+      ->AttachControl(
+        new IBitmapControl(IRECT(90.f, 48.f, sliderBG), sliderBG, kNoParameter), kNoTag, "NAM_Controls_FS")
+      ->Hide(settingsHidden);
+
+    pGraphics
+      ->AttachControl(new IVSliderControl(IRECT(227.f, 34.f, 293.f, 90.f), kBassFrequency, " ",
+                                          style.WithColor(kFG, PluginColors::OFF_WHITE)
+                                            .WithColor(kPR, PluginColors::OFF_WHITE)
+                                            .WithColor(kX1, PluginColors::OFF_WHITE.WithOpacity(0.7f)),
+                                          true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
+                      kNoTag, "NAM_Controls_FS")
+      ->Hide(settingsHidden);
+    pGraphics
+      ->AttachControl(new IVSliderControl(IRECT(310.f, 34.f, 376.f, 90.f), kMidFrequency, " ",
+                                          style.WithColor(kFG, PluginColors::OFF_WHITE)
+                                            .WithColor(kPR, PluginColors::OFF_WHITE)
+                                            .WithColor(kX1, PluginColors::OFF_WHITE.WithOpacity(0.7f)),
+                                          true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
+                      kNoTag, "NAM_Controls_FS")
+      ->Hide(settingsHidden);
+    pGraphics
+      ->AttachControl(new IVSliderControl(IRECT(393.f, 34.f, 459.f, 90.f), kTrebleFrequency, " ",
+                                          style.WithColor(kFG, PluginColors::OFF_WHITE)
+                                            .WithColor(kPR, PluginColors::OFF_WHITE)
+                                            .WithColor(kX1, PluginColors::OFF_WHITE.WithOpacity(0.7f)),
+                                          true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
+                      kNoTag, "NAM_Controls_FS")
+      ->Hide(settingsHidden);
+
     // set Theme Color
     auto setThemeColor = [pGraphics](int cell, IColor color) {
       NAM_THEMECOLOR = color;
@@ -575,9 +613,18 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
         // pControl->SetDirty(false);
       });
     };
-    pGraphics->AttachControl(new IVColorSwatchControl(
-      b.GetGridCell(0, 5, 8).GetPadded(-5.).SubRectVertical(5, 2).GetTranslated(99.f, -9.f), "", setThemeColor,
-      style.WithColor(kFG, NAM_THEMECOLOR), IVColorSwatchControl::ECellLayout::kVertical, {kFG}, {" "}));
+    pGraphics
+      ->AttachControl(new IVColorSwatchControl(IRECT(20.f, 52.f, 105.f, 72.f), "", setThemeColor,
+                                               style.WithColor(kFG, NAM_THEMECOLOR),
+                                               IVColorSwatchControl::ECellLayout::kVertical, {kFG}, {" "}),
+                      kNoTag, "NAM_Controls_FS")
+      ->Hide(settingsHidden);
+    pGraphics
+      ->AttachControl(new IVLabelControl(
+                        IRECT(44.f, 72.f, 145.f, 92.f), "Theme Color",
+                        style.WithDrawFrame(false).WithValueText({DEFAULT_TEXT_SIZE + 3.f, PluginColors::HELP_TEXT})),
+                      kNoTag, "NAM_Controls_FS")
+      ->Hide(settingsHidden);
 
     //     Help/about box
     pGraphics->AttachControl(new IRolloverCircleSVGButtonControl(
@@ -634,6 +681,14 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
           0),
         kCtrlTagAboutBox)
       ->Hide(true);
+
+    auto toggleSettings = [&, pGraphics](IControl* pCaller) {
+      pGraphics->ForControlInGroup(
+        "NAM_Controls_FS", [](IControl* pControl) { settingsHidden ? pControl->Hide(false) : pControl->Hide(true); });
+      settingsHidden = !settingsHidden;
+    };
+    pGraphics->AttachControl(
+      new IRolloverSVGButtonControl(IRECT(153.f, 24.f, 168.f, 39.f).GetPadded(-2.f), toggleSettings, settingsSVG));
   };
 }
 
@@ -710,10 +765,11 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
     const double midGainDB = 3.0 * (this->GetParam(kToneMid)->Value() - 5.0); // +/- 15
     const double trebleGainDB = 2.0 * (this->GetParam(kToneTreble)->Value() - 5.0); // +/- 10
 
-    const double bassFrequency = 150.0;
-    const double midFrequency = 425.0;
-    const double trebleFrequency = 1800.0;
+    const double bassFrequency = this->GetParam(kBassFrequency)->Value();
+    const double midFrequency = this->GetParam(kMidFrequency)->Value();
+    const double trebleFrequency = this->GetParam(kTrebleFrequency)->Value();
     const double bassQuality = 0.707;
+
     // Wider EQ on mid bump up to sound less honky.
     const double midQuality = midGainDB < 0.0 ? 1.5 : 0.7;
     const double trebleQuality = 0.707;

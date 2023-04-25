@@ -69,3 +69,6 @@
 #define KNOB2X_FN "SkinEHeritage_Knob@2x.png"
 #define TOGGLE_FN "SkinEHeritage_Toggle.png"
 #define TOGGLE2X_FN "SkinEHeritage_Toggle@2x.png"
+#define SLIDER_BG_FN "SkinEHeritage_SliderBG.jpeg"
+#define SLIDER_BG2X_FN "SkinEHeritage_SliderBG@2x.jpeg"
+#define SETTINGS_FN "SkinEHeritage_Settings.svg"

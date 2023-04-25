@@ -28,6 +28,9 @@ enum EParams
   kEQActive,
   kOutNorm,
   kOutNormPanel,
+  kBassFrequency,
+  kMidFrequency,
+  kTrebleFrequency,
   kNumParams
 };
 
