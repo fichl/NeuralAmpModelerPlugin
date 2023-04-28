@@ -72,3 +72,5 @@
 #define SLIDER_BG_FN "SkinEHeritage_SliderBG.jpeg"
 #define SLIDER_BG2X_FN "SkinEHeritage_SliderBG@2x.jpeg"
 #define SETTINGS_FN "SkinEHeritage_Settings.svg"
+#define TOGGLEIR_FN "SkinEHeritage_IR.png"
+#define TOGGLEIR2X_FN "SkinEHeritage_IR@2x.png"

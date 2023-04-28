@@ -31,6 +31,8 @@ enum EParams
   kBassFrequency,
   kMidFrequency,
   kTrebleFrequency,
+  kIRToggle,
+//  kPeakColor,
   kNumParams
 };
 
@@ -43,6 +45,7 @@ enum ECtrlTags
   kCtrlTagInputMeter,
   kCtrlTagOutputMeter,
   kCtrlTagAboutBox,
+  kCtrlTagOverlay,
   // kCtrlTagNAMNavUp, // carlo
   // kCtrlTagNAMNavDown, // carlo
   // kCtrlTagIRNavUp, // carlo
@@ -180,4 +183,5 @@ private:
 
   // theme color
   int mThemeColor;
+  int mPeakColor;
 };

@@ -65,6 +65,7 @@ public:
 
 // define initial theme color
 iplug::igraphics::IColor NAM_THEMECOLOR = PluginColors::NAM_RED;
+iplug::igraphics::IColor NAM_PEAKCOLOR = COLOR_YELLOW;
 
 // Styles
 const IVColorSpec activeColorSpec{
@@ -109,7 +110,7 @@ const IVStyle styleInactive = style.WithColors(inactiveColorSpec);
 // needed for colorpicker - dont know better way ;)
 bool ngActive = 1;
 bool eqActive = 1;
-
+bool colorChanged = 0;
 bool settingsHidden = 1;
 
 NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
@@ -135,6 +136,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 , mInputSender()
 , mOutputSender()
 , mThemeColor()
+, mPeakColor()
 {
   activations::Activation::enable_fast_tanh();
   this->GetParam(kInputLevel)->InitGain("Input", 0.0, -20.0, 20.0, 0.1);
@@ -148,7 +150,10 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   this->GetParam(kOutNorm)->InitBool("OutNorm", false);
   this->GetParam(kBassFrequency)->InitDouble("BassFrequency", 150.0, 20.0, 300.0, 0.5);
   this->GetParam(kMidFrequency)->InitDouble("MiddleFrequency", 425.0, 300.0, 800.0, 0.5);
-  this->GetParam(kTrebleFrequency)->InitDouble("TrebleFrequency", 1800.0, 800.0, 3200.0, 0.5);
+  this->GetParam(kTrebleFrequency)->InitDouble("TrebleFrequency", 1800.0, 800.0, 6200.0, 0.5);
+  // this->GetParam(kPeakColor)->InitInt("PeakColor", 16711680, 0, 16777215);
+  // NAM_PEAKCOLOR = IColor::FromColorCode(this->GetParam(kPeakColor)->Value());
+  this->GetParam(kIRToggle)->InitBool("IRToggle", true);
 
   this->mNoiseGateTrigger.AddListener(&this->mNoiseGateGain);
 
@@ -175,6 +180,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     auto rightArrowSVG = pGraphics->LoadSVG(RIGHT_ARROW_FN);
     auto leftArrowSVG = pGraphics->LoadSVG(LEFT_ARROW_FN);
     const IBitmap switchBitmap = pGraphics->LoadBitmap((TOGGLE_FN), 2, true);
+    const IBitmap irSwitch = pGraphics->LoadBitmap((TOGGLEIR_FN), 2, true);
     const IBitmap knobRotateBitmap = pGraphics->LoadBitmap(KNOB_FN);
     pGraphics->LoadFont("Roboto-Regular", ROBOTO_FN);
     const IRECT b = pGraphics->GetBounds();
@@ -524,13 +530,15 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     // The meters
     const float meterMin = -90.0f;
     const float meterMax = -0.01f;
+
     pGraphics
       ->AttachControl(new IVPeakAvgMeterControl(inputMeterArea, "",
                                                 style.WithWidgetFrac(0.5)
                                                   .WithShowValue(false)
                                                   .WithDrawFrame(false)
                                                   .WithColor(kFG, NAM_THEMECOLOR.WithOpacity(0.4f))
-                                                  .WithColor(kX1, NAM_THEMECOLOR),
+                                                  .WithColor(kX1, NAM_THEMECOLOR)
+                                                  .WithColor(kX2, NAM_PEAKCOLOR),
                                                 EDirection::Vertical, {}, 0, meterMin, meterMax, {}),
                       kCtrlTagInputMeter, "NAM_Meters")
       ->As<IVPeakAvgMeterControl<>>()
@@ -541,11 +549,22 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                                                   .WithShowValue(false)
                                                   .WithDrawFrame(false)
                                                   .WithColor(kFG, NAM_THEMECOLOR.WithOpacity(0.4f))
-                                                  .WithColor(kX1, NAM_THEMECOLOR),
+                                                  .WithColor(kX1, NAM_THEMECOLOR)
+                                                  .WithColor(kX2, NAM_PEAKCOLOR),
                                                 EDirection::Vertical, {}, 0, meterMin, meterMax, {}),
                       kCtrlTagOutputMeter, "NAM_Meters")
       ->As<IVPeakAvgMeterControl<>>()
       ->SetPeakSize(2.0f);
+
+    // toggle IR on / off
+    IBSwitchControl* toggleIRactive = new IBSwitchControl(IRECT(46.f, 343.f, irSwitch), irSwitch, kIRToggle);
+    pGraphics->AttachControl(toggleIRactive, kIRToggle);
+    // dim IR dispaly
+    pGraphics
+      ->AttachControl(new IVPanelControl(IRECT(100.f, 344.f, 500.f, 364), "",
+                                         style.WithDrawFrame(false).WithColor(kFG, COLOR_BLACK.WithOpacity(0.75f))),
+                      kCtrlTagOverlay, "NAM_OVERLAY")
+      ->Hide(true);
 
     // frequency Sliders
     auto sliderBG = pGraphics->LoadBitmap(SLIDER_BG_FN);
@@ -580,8 +599,10 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       ->Hide(settingsHidden);
 
     // set Theme Color
-    auto setThemeColor = [pGraphics](int cell, IColor color) {
+    auto setThemeColor = [&, pGraphics](int cell, IColor color) {
       NAM_THEMECOLOR = color;
+      this->mThemeColor = NAM_THEMECOLOR.ToColorCode();
+      colorChanged = true;
       pGraphics->ForControlInGroup("NAM_Controls_NG", [color](IControl* pControl) {
         IVectorBase* pVControl = pControl->As<IVectorBase>();
         ngActive
@@ -622,6 +643,31 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     pGraphics
       ->AttachControl(new IVLabelControl(
                         IRECT(44.f, 72.f, 145.f, 92.f), "Theme Color",
+                        style.WithDrawFrame(false).WithValueText({DEFAULT_TEXT_SIZE + 3.f, PluginColors::HELP_TEXT})),
+                      kNoTag, "NAM_Controls_FS")
+      ->Hide(settingsHidden);
+
+    // set Meter Peak Color
+    auto setPeakColor = [&, pGraphics](int cell, IColor color2) {
+      // this->GetParam(kPeakColor)->Set(color.ToColorCode());  // why this doesnt work ?????
+      NAM_PEAKCOLOR = color2;
+      this->mPeakColor = NAM_PEAKCOLOR.ToColorCode();
+      colorChanged = true;
+
+      pGraphics->ForControlInGroup("NAM_Meters", [color2](IControl* pControl) {
+        IVectorBase* pVControl = pControl->As<IVectorBase>();
+        pVControl->SetStyle(pVControl->GetStyle().WithColor(kX2, color2));
+      });
+    };
+    pGraphics
+      ->AttachControl(
+        new IVColorSwatchControl(IRECT(100.f, 52.f, 195.f, 72.f), "", setPeakColor, style.WithColor(kFG, NAM_PEAKCOLOR),
+                                 IVColorSwatchControl::ECellLayout::kVertical, {kFG}, {" "}),
+        kNoTag, "NAM_Controls_FS")
+      ->Hide(settingsHidden);
+    pGraphics
+      ->AttachControl(new IVLabelControl(
+                        IRECT(134.f, 72.f, 235.f, 92.f), "Peak Color",
                         style.WithDrawFrame(false).WithValueText({DEFAULT_TEXT_SIZE + 3.f, PluginColors::HELP_TEXT})),
                       kNoTag, "NAM_Controls_FS")
       ->Hide(settingsHidden);
@@ -797,13 +843,33 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
   std::feupdateenv(&fe_state);
 
   // apply theme color
-  this->mThemeColor = NAM_THEMECOLOR.ToColorCode();
-  if (this->mNAM != nullptr)
+  if (this->mNAM != nullptr && colorChanged)
+  {
     this->_SetOutputNormalizationDisableState(!this->mNAM->HasLoudness());
-  // debugCounter++;
-  // std::stringstream ss;
-  // ss << "\n\n\n" << debugCounter << "   ---  debugCounter\n\n\n\n";
-  // OutputDebugString(ss.str().c_str());
+    colorChanged = false;
+    // std::stringstream ss;
+    // ss << "\n\n\n" << counter << "   ---  counter\n\n\n\n";
+    // OutputDebugString(ss.str().c_str());
+  }
+
+  // IR Toggle
+  const bool IRToggleIsActive = this->GetParam(kIRToggle)->Value();
+  if (IRToggleIsActive)
+  {
+    if (this->mIR == nullptr && this->mIRPath.GetLength())
+      this->_GetIR(this->mIRPath);
+  }
+  else
+    this->mIR = nullptr;
+
+  auto ui = this->GetUI();
+  if (ui != nullptr)
+  {
+    auto o = ui->GetControlWithTag(kCtrlTagOverlay);
+    if (o != nullptr)
+      IRToggleIsActive ? o->Hide(true) : o->Hide(false);
+  }
+
 
   // Let's get outta here
   // This is where we exit mono for whatever the output requires.
@@ -820,6 +886,7 @@ bool NeuralAmpModeler::SerializeState(IByteChunk& chunk) const
   chunk.PutStr(this->mNAMPath.Get());
   chunk.PutStr(this->mIRPath.Get());
   chunk.Put(&mThemeColor);
+  chunk.Put(&mPeakColor);
   return SerializeParams(chunk);
 }
 
@@ -829,6 +896,7 @@ int NeuralAmpModeler::UnserializeState(const IByteChunk& chunk, int startPos)
   startPos = chunk.GetStr(this->mNAMPath, startPos);
   startPos = chunk.GetStr(this->mIRPath, startPos);
   startPos = chunk.Get(&mThemeColor, startPos);
+  startPos = chunk.Get(&mPeakColor, startPos);
   this->mNAM = nullptr;
   this->mIR = nullptr;
   int retcode = UnserializeParams(chunk, startPos);
@@ -839,6 +907,11 @@ int NeuralAmpModeler::UnserializeState(const IByteChunk& chunk, int startPos)
   if (mThemeColor != -1)
   {
     NAM_THEMECOLOR = IColor::FromColorCode(this->mThemeColor);
+  }
+  if (mPeakColor != -1)
+  {
+    if (mPeakColor != -1)
+      NAM_PEAKCOLOR = IColor::FromColorCode(this->mPeakColor);
   }
   return retcode;
 }
