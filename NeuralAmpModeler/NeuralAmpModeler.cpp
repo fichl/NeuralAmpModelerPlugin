@@ -231,6 +231,15 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                                       .GetTranslated(0.0f, outNormAreaHeight + singleKnobPad)
                                       .GetMidHPadded(outNormAreaHalfWidth);
 
+    // Area for IR bypass toggle
+    const float irBypassToggleX = 46.f;
+    const float irBypassToggleY = 343.f;
+    const IRECT irBypassToggleArea = IRECT(irBypassToggleX, irBypassToggleY, irSwitch);
+
+    // Area for IR bypass toggle
+    const float dimPanelOpacity = 0.75f;
+    const IRECT irBypassDimPanel = IRECT(100.f, 344.f, 500.f, 364.f); // left, top, right, bottom
+
     // Areas for model and IR
     const float fileWidth = 200.0f;
     const float fileHeight = 30.0f;
@@ -446,9 +455,10 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
     // The knobs
     // Input
-    pGraphics->AttachControl(new IVKnobControl(inputKnobArea, kInputLevel, "",
-                                               style.WithColor(kFG, NAM_THEMECOLOR).WithColor(kX1, NAM_THEMECOLOR)),
-                             kNoTag, "NAM_Controls");
+    pGraphics->AttachControl(
+      new IVKnobControl(
+        inputKnobArea, kInputLevel, "", style.WithColor(kFG, NAM_THEMECOLOR).WithColor(kX1, NAM_THEMECOLOR), true),
+      kNoTag, "NAM_Controls");
     pGraphics->AttachControl(
       new IBKnobRotaterControl(inputKnobArea, knobRotateBitmap, kInputLevel), kNoTag, "kInputLevel");
     // Noise gate
@@ -457,7 +467,8 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                                             ? style.WithColor(kFG, NAM_THEMECOLOR).WithColor(kX1, NAM_THEMECOLOR)
                                             : styleInactive.WithColor(kFG, NAM_THEMECOLOR.WithOpacity(0.3f))
                                                 .WithColor(kX1, NAM_THEMECOLOR.WithOpacity(0.5f));
-    IVKnobControl* noiseGateControl = new IVKnobControl(noiseGateArea, kNoiseGateThreshold, "", noiseGateInitialStyle);
+    IVKnobControl* noiseGateControl =
+      new IVKnobControl(noiseGateArea, kNoiseGateThreshold, "", noiseGateInitialStyle, true);
     pGraphics->AttachControl(noiseGateControl, kNoTag, "NAM_Controls_NG");
     pGraphics->AttachControl(
       new IBKnobRotaterControl(noiseGateArea, knobRotateBitmap, kNoiseGateThreshold), kNoTag, "kNoiseGateThreshold");
@@ -467,9 +478,9 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                                             ? style.WithColor(kFG, NAM_THEMECOLOR).WithColor(kX1, NAM_THEMECOLOR)
                                             : styleInactive.WithColor(kFG, NAM_THEMECOLOR.WithOpacity(0.3f))
                                                 .WithColor(kX1, NAM_THEMECOLOR.WithOpacity(0.5f));
-    IVKnobControl* bassControl = new IVKnobControl(bassKnobArea, kToneBass, "", toneStackInitialStyle);
-    IVKnobControl* middleControl = new IVKnobControl(middleKnobArea, kToneMid, "", toneStackInitialStyle);
-    IVKnobControl* trebleControl = new IVKnobControl(trebleKnobArea, kToneTreble, "", toneStackInitialStyle);
+    IVKnobControl* bassControl = new IVKnobControl(bassKnobArea, kToneBass, "", toneStackInitialStyle, true);
+    IVKnobControl* middleControl = new IVKnobControl(middleKnobArea, kToneMid, "", toneStackInitialStyle, true);
+    IVKnobControl* trebleControl = new IVKnobControl(trebleKnobArea, kToneTreble, "", toneStackInitialStyle, true);
     pGraphics->AttachControl(bassControl, kNoTag, "NAM_Controls_EQ");
     pGraphics->AttachControl(middleControl, kNoTag, "NAM_Controls_EQ");
     pGraphics->AttachControl(trebleControl, kNoTag, "NAM_Controls_EQ");
@@ -478,9 +489,10 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     pGraphics->AttachControl(
       new IBKnobRotaterControl(trebleKnobArea, knobRotateBitmap, kToneTreble), kNoTag, "kToneTreble");
     // Output
-    pGraphics->AttachControl(new IVKnobControl(outputKnobArea, kOutputLevel, "",
-                                               style.WithColor(kFG, NAM_THEMECOLOR).WithColor(kX1, NAM_THEMECOLOR)),
-                             kNoTag, "NAM_Controls");
+    pGraphics->AttachControl(
+      new IVKnobControl(
+        outputKnobArea, kOutputLevel, "", style.WithColor(kFG, NAM_THEMECOLOR).WithColor(kX1, NAM_THEMECOLOR), true),
+      kNoTag, "NAM_Controls");
     pGraphics->AttachControl(
       new IBKnobRotaterControl(outputKnobArea, knobRotateBitmap, kOutputLevel), kNoTag, "kOutputLevel");
 
@@ -557,14 +569,24 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       ->SetPeakSize(2.0f);
 
     // toggle IR on / off
-    IBSwitchControl* toggleIRactive = new IBSwitchControl(IRECT(46.f, 343.f, irSwitch), irSwitch, kIRToggle);
+    IBSwitchControl* toggleIRactive = new IBSwitchControl(irBypassToggleArea, irSwitch, kIRToggle);
     pGraphics->AttachControl(toggleIRactive, kIRToggle);
     // dim IR dispaly
     pGraphics
-      ->AttachControl(new IVPanelControl(IRECT(100.f, 344.f, 500.f, 364), "",
-                                         style.WithDrawFrame(false).WithColor(kFG, COLOR_BLACK.WithOpacity(0.75f))),
-                      kCtrlTagOverlay, "NAM_OVERLAY")
-      ->Hide(true);
+      ->AttachControl(
+        new IVPanelControl(
+          irBypassDimPanel, "", style.WithDrawFrame(false).WithColor(kFG, COLOR_BLACK.WithOpacity(dimPanelOpacity))),
+        kNoTag, "NAM_OVERLAY")
+      ->Hide(this->GetParam(kIRToggle)->Value());
+
+    // Extend the ir toggle action function to set dim panel visible or not
+    auto setIRdimPanelVisibility = [&, pGraphics, irBypassDimPanel](IControl* pCaller) {
+      const bool irActive = pCaller->GetValue() > 0;
+      pGraphics->ForControlInGroup(
+        "NAM_OVERLAY", [&](IControl* pControl) { irActive ? pControl->Hide(true) : pControl->Hide(false); });
+    };
+    auto toggleIRactiveAction = [setIRdimPanelVisibility](IControl* pCaller) { setIRdimPanelVisibility(pCaller); };
+    toggleIRactive->SetActionFunction(toggleIRactiveAction);
 
     // frequency Sliders
     auto sliderBG = pGraphics->LoadBitmap(SLIDER_BG_FN);
@@ -836,7 +858,7 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
   }
 
   sample** irPointers = toneStackOutPointers;
-  if (this->mIR != nullptr)
+  if (this->mIR != nullptr && this->GetParam(kIRToggle)->Value())
     irPointers = this->mIR->Process(toneStackOutPointers, numChannelsInternal, numFrames);
 
   // restore previous floating point state
@@ -851,25 +873,6 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
     // ss << "\n\n\n" << counter << "   ---  counter\n\n\n\n";
     // OutputDebugString(ss.str().c_str());
   }
-
-  // IR Toggle
-  const bool IRToggleIsActive = this->GetParam(kIRToggle)->Value();
-  if (IRToggleIsActive)
-  {
-    if (this->mIR == nullptr && this->mIRPath.GetLength())
-      this->_GetIR(this->mIRPath);
-  }
-  else
-    this->mIR = nullptr;
-
-  auto ui = this->GetUI();
-  if (ui != nullptr)
-  {
-    auto o = ui->GetControlWithTag(kCtrlTagOverlay);
-    if (o != nullptr)
-      IRToggleIsActive ? o->Hide(true) : o->Hide(false);
-  }
-
 
   // Let's get outta here
   // This is where we exit mono for whatever the output requires.
@@ -1135,18 +1138,31 @@ void NeuralAmpModeler::_PrepareIOPointers(const size_t numChannels)
 void NeuralAmpModeler::_ProcessInput(iplug::sample** inputs, const size_t nFrames, const size_t nChansIn,
                                      const size_t nChansOut)
 {
-  // Assume _PrepareBuffers() was already called
-  const double gain = pow(10.0, GetParam(kInputLevel)->Value() / 20.0);
-  if (nChansOut <= nChansIn) // Many->few: Drop additional channels
-    for (size_t c = 0; c < nChansOut; c++)
-      for (size_t s = 0; s < nFrames; s++)
-        this->mInputArray[c][s] = gain * inputs[c][s];
-  else
+  // We'll assume that the main processing is mono for now. We'll handle dual amps later.
+  // See also: this->mNUM_INTERNAL_CHANNELS
+  if (nChansOut != 1)
   {
-    // Something is wrong--this is a mono plugin. How could there be fewer
-    // incoming channels?
-    throw std::runtime_error("Unexpected input processing--sees fewer than 1 incoming channel?");
+    std::stringstream ss;
+    ss << "Expected mono output, but " << nChansOut << " output channels are requested!";
+    throw std::runtime_error(ss.str());
   }
+
+// On the standalone, we can probably assume that the user has plugged into only one input and they expect it to be
+// carried straight through. Don't apply any division over nCahnsIn because we're just "catching anything out there."
+// However, in a DAW, it's probably something providing stereo, and we want to take the average in order to avoid
+// doubling the loudness.
+#ifdef APP_API
+  const double gain = pow(10.0, GetParam(kInputLevel)->Value() / 20.0);
+#else
+  const double gain = pow(10.0, GetParam(kInputLevel)->Value() / 20.0) / (float)nChansIn;
+#endif
+  // Assume _PrepareBuffers() was already called
+  for (size_t c = 0; c < nChansIn; c++)
+    for (size_t s = 0; s < nFrames; s++)
+      if (c == 0)
+        this->mInputArray[0][s] = gain * inputs[c][s];
+      else
+        this->mInputArray[0][s] += gain * inputs[c][s];
 }
 
 void NeuralAmpModeler::_ProcessOutput(iplug::sample** inputs, iplug::sample** outputs, const size_t nFrames,

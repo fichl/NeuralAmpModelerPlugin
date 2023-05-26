@@ -45,7 +45,6 @@ enum ECtrlTags
   kCtrlTagInputMeter,
   kCtrlTagOutputMeter,
   kCtrlTagAboutBox,
-  kCtrlTagOverlay,
   // kCtrlTagNAMNavUp, // carlo
   // kCtrlTagNAMNavDown, // carlo
   // kCtrlTagIRNavUp, // carlo
