@@ -727,7 +727,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
               IRECT(), versionStr.Get(),
               style.WithDrawFrame(false).WithValueText({DEFAULT_TEXT_SIZE, EAlign::Center, PluginColors::HELP_TEXT})));
             pParent->AddChildControl(new IVLabelControl(
-              IRECT(), "By Steven Atkinson",
+              IRECT(), "By Steven Atkinson - modded by fichl",
               style.WithDrawFrame(false).WithValueText({DEFAULT_TEXT_SIZE, EAlign::Center, PluginColors::HELP_TEXT})));
             pParent->AddChildControl(new IURLControl(IRECT(), "Train your own model",
                                                      "https://github.com/sdatkinson/neural-amp-modeler",

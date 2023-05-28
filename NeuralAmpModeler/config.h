@@ -1,7 +1,7 @@
 #define PLUG_NAME "NeuralAmpModeler"
 #define PLUG_MFR "Steven Atkinson"
-#define PLUG_VERSION_HEX 0x00000702
-#define PLUG_VERSION_STR "0.7.2"
+#define PLUG_VERSION_HEX 0x00000703
+#define PLUG_VERSION_STR "0.7.3"
 #define PLUG_UNIQUE_ID '1YEo'
 #define PLUG_MFR_ID 'SDAa'
 #define PLUG_URL_STR "https://github.com/sdatkinson/NeuralAmpModelerPlugin"
@@ -32,10 +32,8 @@
 #define PLUG_FPS 60
 #define PLUG_SHARED_RESOURCES 0
 #define PLUG_HOST_RESIZE 0
-#define PLUG_MIN_WIDTH 250
-#define PLUG_MIN_HEIGHT 150
-#define PLUG_MAX_WIDTH 1000
-#define PLUG_MAX_HEIGHT 600
+#define PLUG_MAX_WIDTH PLUG_WIDTH * 4
+#define PLUG_MAX_HEIGHT PLUG_HEIGHT * 4
 
 #define AUV2_ENTRY NeuralAmpModeler_Entry
 #define AUV2_ENTRY_STR "NeuralAmpModeler_Entry"
