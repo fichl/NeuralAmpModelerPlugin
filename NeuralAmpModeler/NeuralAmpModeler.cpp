@@ -900,8 +900,8 @@ int NeuralAmpModeler::UnserializeState(const IByteChunk& chunk, int startPos)
   startPos = chunk.GetStr(this->mIRPath, startPos);
   startPos = chunk.Get(&mThemeColor, startPos);
   startPos = chunk.Get(&mPeakColor, startPos);
-  this->mNAM = nullptr;
-  this->mIR = nullptr;
+//  this->mNAM = nullptr;
+//  this->mIR = nullptr;
   int retcode = UnserializeParams(chunk, startPos);
   if (this->mNAMPath.GetLength())
     this->_GetNAM(this->mNAMPath);
