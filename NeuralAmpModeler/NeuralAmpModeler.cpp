@@ -70,6 +70,7 @@ EMsgBoxResult _ShowMessageBox(iplug::igraphics::IGraphics* pGraphics, const char
 NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 : Plugin(info, MakeConfig(kNumParams, kNumPresets))
 {
+  _InitToneStack();
   nam::activations::Activation::enable_fast_tanh();
   GetParam(kInputLevel)->InitGain("Input", 0.0, -20.0, 20.0, 0.1);
   GetParam(kToneBass)->InitDouble("Bass", 5.0, 0.0, 10.0, 0.1);
@@ -283,7 +284,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                              -1, "NAM_Controls_FS");
     pGraphics->AttachControl(new ISVGSwitchControl(
       frequencySliderToggleArea, {frequencySlidersIconOffSVG, frequencySlidersIconOnSVG}, kShowFrequencySliders));
-    
+
     // Help/about box
     pGraphics->AttachControl(new NAMCircleButtonControl(
       helpButtonArea,
@@ -364,38 +365,9 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
   sample** gateGainOutput =
     noiseGateActive ? mNoiseGateGain.Process(mOutputPointers, numChannelsInternal, numFrames) : mOutputPointers;
 
-  sample** toneStackOutPointers = gateGainOutput;
-  if (toneStackActive)
-  {
-    // Translate params from knob 0-10 to dB.
-    // Tuned ranges based on my ear. E.g. seems treble doesn't need nearly as
-    // much swing as bass can use.
-    const double bassGainDB = 4.0 * (GetParam(kToneBass)->Value() - 5.0); // +/- 20
-    const double midGainDB = 3.0 * (GetParam(kToneMid)->Value() - 5.0); // +/- 15
-    const double trebleGainDB = 2.0 * (GetParam(kToneTreble)->Value() - 5.0); // +/- 10
-
-    const double bassFrequency = GetParam(kBassFrequency)->Value();
-    const double midFrequency = GetParam(kMidFrequency)->Value();
-    const double trebleFrequency = GetParam(kTrebleFrequency)->Value();
-    const double bassQuality = 0.707;
-    // Wider EQ on mid bump up to sound less honky.
-    const double midQuality = midGainDB < 0.0 ? 1.5 : 0.7;
-    const double trebleQuality = 0.707;
-
-    // Define filter parameters
-    recursive_linear_filter::BiquadParams bassParams(sampleRate, bassFrequency, bassQuality, bassGainDB);
-    recursive_linear_filter::BiquadParams midParams(sampleRate, midFrequency, midQuality, midGainDB);
-    recursive_linear_filter::BiquadParams trebleParams(sampleRate, trebleFrequency, trebleQuality, trebleGainDB);
-    // Apply tone stack
-    // Set parameters
-    mToneBass.SetParams(bassParams);
-    mToneMid.SetParams(midParams);
-    mToneTreble.SetParams(trebleParams);
-    sample** bassPointers = mToneBass.Process(gateGainOutput, numChannelsInternal, numFrames);
-    sample** midPointers = mToneMid.Process(bassPointers, numChannelsInternal, numFrames);
-    sample** treblePointers = mToneTreble.Process(midPointers, numChannelsInternal, numFrames);
-    toneStackOutPointers = treblePointers;
-  }
+  sample** toneStackOutPointers = (toneStackActive && mToneStack != nullptr)
+                                    ? mToneStack->Process(gateGainOutput, numChannelsInternal, numFrames)
+                                    : gateGainOutput;
 
   sample** irPointers = toneStackOutPointers;
   if (mIR != nullptr && GetParam(kIRToggle)->Value())
@@ -426,6 +398,8 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
 void NeuralAmpModeler::OnReset()
 {
   const auto sampleRate = GetSampleRate();
+  const int maxBlockSize = GetBlockSize();
+
   // Tail is because the HPF DC blocker has a decay.
   // 10 cycles should be enough to pass the VST3 tests checking tail behavior.
   // I'm ignoring the model & IR, but it's not the end of the world.
@@ -436,6 +410,7 @@ void NeuralAmpModeler::OnReset()
   mCheckSampleRateWarning = true;
   // If there is a model or IR loaded, they need to be checked for resampling.
   _ResetModelAndIR(sampleRate, GetBlockSize());
+  mToneStack->Reset(sampleRate, maxBlockSize);
 }
 
 void NeuralAmpModeler::OnIdle()
@@ -458,6 +433,12 @@ void NeuralAmpModeler::OnIdle()
 
 bool NeuralAmpModeler::SerializeState(IByteChunk& chunk) const
 {
+  // If this isn't here when unserializing, then we know we're dealing with something before v0.8.0.
+  WDL_String header("###NeuralAmpModeler###"); // Don't change this!
+  chunk.PutStr(header.Get());
+  // Plugin version, so we can load legacy serialized states in the future!
+  WDL_String version(PLUG_VERSION_STR);
+  chunk.PutStr(version.Get());
   // Model directory (don't serialize the model itself; we'll just load it again
   // when we unserialize)
   chunk.PutStr(mNAMPath.Get());
@@ -468,7 +449,19 @@ bool NeuralAmpModeler::SerializeState(IByteChunk& chunk) const
 
 int NeuralAmpModeler::UnserializeState(const IByteChunk& chunk, int startPos)
 {
-  WDL_String dir;
+  WDL_String header;
+  startPos = chunk.GetStr(header, startPos);
+  // TODO: Handle legacy plugin serialized states.
+  // if strncmp (header.Get(), "###NeuralAmpModeler###")
+  //{
+  //  return UnserializeStateLegacy(header, startPos);  // (We'll assume 0.7.9).
+  //}
+  WDL_String version;
+  startPos = chunk.GetStr(version, startPos);
+  // Version-specific loading here if needed.
+  // ...
+
+  // Current version loading:
   startPos = chunk.GetStr(mNAMPath, startPos);
   startPos = chunk.GetStr(mIRPath, startPos);
   startPos = chunk.GetStr(mHighLightColor, startPos);
@@ -512,7 +505,7 @@ void NeuralAmpModeler::OnUIOpen()
         int r, g, b;
         GetTrackColor(r, g, b);
         if (r + g + b > 0) // is default color set in DAW ?
-            NAM_CUSTOMTHEMECOLOR = IColor(255, r, g, b);
+          NAM_CUSTOMTHEMECOLOR = IColor(255, r, g, b);
       }
       else
       {
@@ -528,6 +521,26 @@ void NeuralAmpModeler::OnUIOpen()
   });
 }
 
+void NeuralAmpModeler::OnParamChange(int paramIdx)
+{
+  switch (paramIdx)
+  {
+    case kToneBass:
+    case kBassFrequency:
+      mToneStack->SetParam("bass", GetParam(kToneBass)->Value(), GetParam(kBassFrequency)->Value());
+      break;
+    case kToneMid:
+    case kMidFrequency:
+      mToneStack->SetParam("middle", GetParam(kToneMid)->Value(), GetParam(kMidFrequency)->Value());
+      break;
+    case kToneTreble:
+    case kTrebleFrequency:
+      mToneStack->SetParam("treble", GetParam(kToneTreble)->Value(), GetParam(kTrebleFrequency)->Value());
+      break;
+    default: break;
+  }
+}
+
 void NeuralAmpModeler::OnParamChangeUI(int paramIdx, EParamSource source)
 {
   if (auto pGraphics = GetUI())
@@ -539,7 +552,8 @@ void NeuralAmpModeler::OnParamChangeUI(int paramIdx, EParamSource source)
       case kNoiseGateActive: pGraphics->GetControlWithParamIdx(kNoiseGateThreshold)->SetDisabled(!active); break;
       case kEQActive:
         pGraphics->ForControlInGroup("EQ_KNOBS", [active](IControl* pControl) { pControl->SetDisabled(!active); });
-        pGraphics->ForControlInGroup("NAM_Controls_FS", [active](IControl* pControl) { pControl->SetDisabled(!active); });
+        pGraphics->ForControlInGroup(
+          "NAM_Controls_FS", [active](IControl* pControl) { pControl->SetDisabled(!active); });
         break;
       case kShowFrequencySliders:
         pGraphics->ForControlInGroup("NAM_Controls_FS", [active](IControl* pControl) { pControl->Hide(!active); });
@@ -559,7 +573,7 @@ void NeuralAmpModeler::OnParamChangeUI(int paramIdx, EParamSource source)
             {
               if (mHighLightColor.GetLength())
                 NAM_CUSTOMTHEMECOLOR = IColor::FromColorCodeStr(mHighLightColor.Get());
-              else 
+              else
                 NAM_CUSTOMTHEMECOLOR = PluginColors::NAM_THEMECOLOR;
             }
 
@@ -634,6 +648,7 @@ void NeuralAmpModeler::_ApplyDSPStaging()
     mNAMPath.Set("");
     mShouldRemoveModel = false;
     mCheckSampleRateWarning = true;
+    SetLatency(0);
   }
   if (mShouldRemoveIR)
   {
@@ -649,6 +664,7 @@ void NeuralAmpModeler::_ApplyDSPStaging()
     mStagedModel = nullptr;
     mNewModelLoadedInDSP = true;
     mCheckSampleRateWarning = true;
+    SetLatency(mModel->GetLatency());
   }
   if (mStagedIR != nullptr)
   {
@@ -832,6 +848,11 @@ size_t NeuralAmpModeler::_GetBufferNumFrames() const
   return mInputArray[0].size();
 }
 
+void NeuralAmpModeler::_InitToneStack()
+{
+  // If you want to customize the tone stack, then put it here!
+  mToneStack = std::make_unique<dsp::tone_stack::VariableNamToneStack>();
+}
 void NeuralAmpModeler::_PrepareBuffers(const size_t numChannels, const size_t numFrames)
 {
   const bool updateChannels = numChannels != _GetBufferNumChannels();
