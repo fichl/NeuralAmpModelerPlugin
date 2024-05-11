@@ -56,5 +56,12 @@ protected:
   double mMiddleVal = 5.0;
   double mTrebleVal = 5.0;
 };
+
+class VariableNamToneStack : public BasicNamToneStack
+{
+public:
+  void SetParam(const std::string name, const double val, const double freq);
+};
+
 }; // namespace tone_stack
 }; // namespace dsp

@@ -496,16 +496,19 @@ void NeuralAmpModeler::OnParamChange(int paramIdx)
 {
     switch (paramIdx)
     {
-    case kToneBass:
-      mToneStack->SetParam("bass", GetParam(paramIdx)->Value()); 
-      break;
-    case kToneMid:
-      mToneStack->SetParam("middle", GetParam(paramIdx)->Value());
-      break;
-    case kToneTreble:
-      mToneStack->SetParam("treble", GetParam(paramIdx)->Value());
-      break;
-    default: break;
+      case kToneBass:
+      case kBassFrequency:
+        mToneStack->SetParam("bass", GetParam(kToneBass)->Value(), GetParam(kBassFrequency)->Value());
+        break;
+      case kToneMid:
+      case kMidFrequency:
+        mToneStack->SetParam("middle", GetParam(kToneMid)->Value(), GetParam(kMidFrequency)->Value());
+        break;
+      case kToneTreble:
+      case kTrebleFrequency:
+        mToneStack->SetParam("treble", GetParam(kToneTreble)->Value(), GetParam(kTrebleFrequency)->Value());
+        break;
+      default: break;
     }
 }
 
@@ -791,7 +794,7 @@ size_t NeuralAmpModeler::_GetBufferNumFrames() const
 void NeuralAmpModeler::_InitToneStack()
 {
   // If you want to customize the tone stack, then put it here!
-  mToneStack = std::make_unique<dsp::tone_stack::BasicNamToneStack>();
+  mToneStack = std::make_unique<dsp::tone_stack::VariableNamToneStack>();
 }
 void NeuralAmpModeler::_PrepareBuffers(const size_t numChannels, const size_t numFrames)
 {

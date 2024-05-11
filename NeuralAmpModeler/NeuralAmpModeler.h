@@ -308,7 +308,7 @@ private:
   std::atomic<bool> mCheckSampleRateWarning = true;
 
   // Tone stack modules
-  std::unique_ptr<dsp::tone_stack::AbstractToneStack> mToneStack;
+  std::unique_ptr<dsp::tone_stack::VariableNamToneStack> mToneStack;
 
   // Post-IR filters
   recursive_linear_filter::HighPass mHighPass;
