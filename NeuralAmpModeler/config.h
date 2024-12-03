@@ -1,7 +1,7 @@
 #define PLUG_NAME "NeuralAmpModeler"
 #define PLUG_MFR "Steven Atkinson"
-#define PLUG_VERSION_HEX 0x0000070a
-#define PLUG_VERSION_STR "0.7.10"
+#define PLUG_VERSION_HEX 0x0000070c
+#define PLUG_VERSION_STR "0.7.12"
 #define PLUG_UNIQUE_ID '1YEo'
 #define PLUG_MFR_ID 'SDAa'
 #define PLUG_URL_STR "https://github.com/sdatkinson/NeuralAmpModelerPlugin"
@@ -79,6 +79,9 @@
 #define FILEBACKGROUND_FN "FileBackground.png"
 #define FILEBACKGROUND2X_FN "FileBackground@2x.png"
 #define FILEBACKGROUND3X_FN "FileBackground@3x.png"
+#define INPUTLEVELBACKGROUND_FN "InputLevelBackground.png"
+#define INPUTLEVELBACKGROUND2X_FN "InputLevelBackground@2x.png"
+#define INPUTLEVELBACKGROUND3X_FN "InputLevelBackground@3x.png"
 #define LINES_FN "Lines.png"
 #define LINES2X_FN "Lines@2x.png"
 #define LINES3X_FN "Lines@3x.png"

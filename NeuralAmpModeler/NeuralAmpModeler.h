@@ -7,6 +7,7 @@
 #include "AudioDSPTools/dsp/wav.h"
 #include "AudioDSPTools/dsp/ResamplingContainer/ResamplingContainer.h"
 
+#include "Colors.h"
 #include "ToneStack.h"
 
 #include "IPlug_include_in_plug_hdr.h"
@@ -39,8 +40,12 @@ enum EParams
   // The rest is fine though.
   kNoiseGateActive,
   kEQActive,
-  kOutNorm,
   kIRToggle,
+  // Input calibration
+  kCalibrateInput,
+  kInputCalibrationLevel,
+  kOutputMode,
+  // fichls extras
   kBassFrequency,
   kMidFrequency,
   kTrebleFrequency,
@@ -58,7 +63,9 @@ enum ECtrlTags
   kCtrlTagInputMeter,
   kCtrlTagOutputMeter,
   kCtrlTagSettingsBox,
-  kCtrlTagOutNorm,
+  kCtrlTagOutputMode,
+  kCtrlTagCalibrateInput,
+  kCtrlTagInputCalibrationLevel,
   kNumCtrlTags
 };
 
@@ -107,7 +114,17 @@ public:
     // Get the other information from the encapsulated NAM so that we can tell the outside world about what we're
     // holding.
     if (mEncapsulated->HasLoudness())
+    {
       SetLoudness(mEncapsulated->GetLoudness());
+    }
+    if (mEncapsulated->HasInputLevel())
+    {
+      SetInputLevel(mEncapsulated->GetInputLevel());
+    }
+    if (mEncapsulated->HasOutputLevel())
+    {
+      SetOutputLevel(mEncapsulated->GetOutputLevel());
+    }
 
     // NOTE: prewarm samples doesn't mean anything--we can prewarm the encapsulated model as it likes and be good to
     // go.
@@ -140,7 +157,7 @@ public:
 
   int GetLatency() const { return NeedToResample() ? mResampler.GetLatency() : 0; };
 
-  void Reset(const double sampleRate, const int maxBlockSize)
+  void Reset(const double sampleRate, const int maxBlockSize) override
   {
     mExpectedSampleRate = sampleRate;
     mMaxExternalBlockSize = maxBlockSize;
@@ -206,8 +223,6 @@ private:
   size_t _GetBufferNumChannels() const;
   size_t _GetBufferNumFrames() const;
   void _InitToneStack();
-  // Apply the normalization for the model output (if possible)
-  void _NormalizeModelOutput(iplug::sample** buffer, const size_t numChannels, const size_t numFrames);
   // Loads a NAM model and stores it to mStagedNAM
   // Returns an empty string on success, or an error message on failure.
   std::string _StageModel(const WDL_String& dspFile);
@@ -233,11 +248,18 @@ private:
   // Resetting for models and IRs, called by OnReset
   void _ResetModelAndIR(const double sampleRate, const int maxBlockSize);
 
-  // Unserialize current-version plug-in data:
-  int _UnserializeStateCurrent(const iplug::IByteChunk& chunk, int startPos);
-  // Unserialize v0.7.9 legacy data:
-  int _UnserializeStateLegacy_0_7_9(const iplug::IByteChunk& chunk, int startPos);
-  // And other legacy unsrializations if/as needed...
+  void _SetInputGain();
+  void _SetOutputGain();
+
+  // See: Unserialization.cpp
+  void _UnserializeApplyConfig(nlohmann::json& config);
+  // 0.7.9 and later
+  int _UnserializeStateWithKnownVersion(const iplug::IByteChunk& chunk, int startPos);
+  // Hopefully 0.7.3-0.7.8, but no gurantees
+  int _UnserializeStateWithUnknownVersion(const iplug::IByteChunk& chunk, int startPos);
+
+  // Update all controls that depend on a model
+  void _UpdateControlsFromModel();
 
   // Make sure that the latency is reported correctly.
   void _UpdateLatency();
@@ -258,6 +280,10 @@ private:
   iplug::sample** mInputPointers = nullptr;
   iplug::sample** mOutputPointers = nullptr;
 
+  // Input and output gain
+  double mInputGain = 1.0;
+  double mOutputGain = 1.0;
+
   // Noise gates
   dsp::noise_gate::Trigger mNoiseGateTrigger;
   dsp::noise_gate::Gain mNoiseGateGain;
@@ -273,6 +299,7 @@ private:
   std::atomic<bool> mShouldRemoveIR = false;
 
   std::atomic<bool> mNewModelLoadedInDSP = false;
+  std::atomic<bool> mModelCleared = false;
 
   // Tone stack modules
   std::unique_ptr<dsp::tone_stack::VariableNamToneStack> mToneStack;
