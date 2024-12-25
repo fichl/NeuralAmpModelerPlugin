@@ -453,7 +453,7 @@ class IContainerBaseWithNamedChildren : public IContainerBase
 {
 public:
   IContainerBaseWithNamedChildren(const IRECT& bounds)
-  : IContainerBase(bounds){};
+  : IContainerBase(bounds) {};
   ~IContainerBaseWithNamedChildren() = default;
 
 protected:
@@ -495,7 +495,7 @@ class ModelInfoControl : public IContainerBaseWithNamedChildren
 public:
   ModelInfoControl(const IRECT& bounds, const IVStyle& style)
   : IContainerBaseWithNamedChildren(bounds)
-  , mStyle(style){};
+  , mStyle(style) {};
 
   void ClearModelInfo()
   {
@@ -562,7 +562,7 @@ class OutputModeControl : public IVRadioButtonControl
 public:
   OutputModeControl(const IRECT& bounds, int paramIdx, const IVStyle& style, float buttonSize)
   : IVRadioButtonControl(
-    bounds, paramIdx, {}, "Output Mode", style, EVShape::Ellipse, EDirection::Vertical, buttonSize){};
+      bounds, paramIdx, {}, "Output Mode", style, EVShape::Ellipse, EDirection::Vertical, buttonSize) {};
 
   void SetNormalizedDisable(const bool disable)
   {
@@ -810,7 +810,8 @@ private:
     {
       IControl::SetValueFromDelegate(normalizedValue, valIdx);
       const std::string s = ConvertToString(normalizedValue);
-      OnTextEntryCompletion(s.c_str(), valIdx);
+      SetStr(s.c_str());
+      SetDirty(false);
     };
 
   private:
@@ -833,7 +834,7 @@ private:
     AboutControl(const IRECT& bounds, const IVStyle& style, const IText& text)
     : IContainerBase(bounds)
     , mStyle(style)
-    , mText(text){};
+    , mText(text) {};
 
     void OnAttached() override
     {
