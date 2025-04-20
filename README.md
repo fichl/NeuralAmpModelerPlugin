@@ -5,6 +5,14 @@ A VST3/AudioUnit plug-in\* for [Neural Amp Modeler](https://github.com/sdatkinso
 - https://www.youtube.com/user/RunawayThumbtack
 - https://github.com/sdatkinson/neural-amp-modeler
 
+## Extra Features
+
+- individual theme colors per NAM instance
+- sliders to finetune the eq frequencies
+
+theme color can be set manually in the plugin settings or you can choose to follow the track color set in your DAW.
+sliders for the bass, mid, and high frequencies can be shown by clicking on a tiny icon to the right of the "EQ" label.
+
 ## Installation
 
 Check the [Releases](https://github.com/sdatkinson/NeuralAmpModelerPlugin/releases) for pre-built installers for the plugin!
