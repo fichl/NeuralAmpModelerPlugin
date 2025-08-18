@@ -5,8 +5,8 @@
 #include <utility>
 
 #include "Colors.h"
-#include "NeuralAmpModelerCore/NAM/activations.h"
-#include "NeuralAmpModelerCore/NAM/get_dsp.h"
+#include "../NeuralAmpModelerCore/NAM/activations.h"
+#include "../NeuralAmpModelerCore/NAM/get_dsp.h"
 // clang-format off
 // These includes need to happen in this order or else the latter won't know
 // a bunch of stuff.
@@ -126,6 +126,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
     const auto gearSVG = pGraphics->LoadSVG(GEAR_FN);
     const auto fileSVG = pGraphics->LoadSVG(FILE_FN);
+    const auto globeSVG = pGraphics->LoadSVG(GLOBE_ICON_FN);
     const auto crossSVG = pGraphics->LoadSVG(CLOSE_BUTTON_FN);
     const auto rightArrowSVG = pGraphics->LoadSVG(RIGHT_ARROW_FN);
     const auto leftArrowSVG = pGraphics->LoadSVG(LEFT_ARROW_FN);
@@ -167,8 +168,6 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const auto ngToggleArea =
       noiseGateArea.GetVShifted(noiseGateArea.H()).SubRectVertical(2, 0).GetReducedFromTop(10.0f);
     const auto eqToggleArea = midKnobArea.GetVShifted(midKnobArea.H()).SubRectVertical(2, 0).GetReducedFromTop(10.0f);
-    const auto outNormToggleArea =
-      outputKnobArea.GetVShifted(midKnobArea.H()).SubRectVertical(2, 0).GetReducedFromTop(10.0f);
 
     // Area for frequency sliders
     const auto bassSliderArea =
@@ -243,14 +242,18 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const std::string defaultNamFileString = "Select model...";
     const std::string defaultIRString = "Select IR...";
 #endif
-    pGraphics->AttachControl(new NAMFileBrowserControl(modelArea, kMsgTagClearModel, defaultNamFileString.c_str(),
-                                                       "nam", loadModelCompletionHandler, style, fileSVG, crossSVG,
-                                                       leftArrowSVG, rightArrowSVG, fileBackgroundBitmap),
-                             kCtrlTagModelFileBrowser);
+    // Getting started page listing additional resources
+    const char* const getUrl = "https://www.neuralampmodeler.com/users#comp-marb84o5";
+    pGraphics->AttachControl(
+      new NAMFileBrowserControl(modelArea, kMsgTagClearModel, defaultNamFileString.c_str(), "nam",
+                                loadModelCompletionHandler, style, fileSVG, crossSVG, leftArrowSVG, rightArrowSVG,
+                                fileBackgroundBitmap, globeSVG, "Get NAM Models", getUrl),
+      kCtrlTagModelFileBrowser);
     pGraphics->AttachControl(new ISVGSwitchControl(irSwitchArea, {irIconOffSVG, irIconOnSVG}, kIRToggle));
     pGraphics->AttachControl(
       new NAMFileBrowserControl(irArea, kMsgTagClearIR, defaultIRString.c_str(), "wav", loadIRCompletionHandler, style,
-                                fileSVG, crossSVG, leftArrowSVG, rightArrowSVG, fileBackgroundBitmap),
+                                fileSVG, crossSVG, leftArrowSVG, rightArrowSVG, fileBackgroundBitmap, globeSVG,
+                                "Get IRs", getUrl),
       kCtrlTagIRFileBrowser);
     pGraphics->AttachControl(
       new NAMSwitchControl(ngToggleArea, kNoiseGateActive, "Noise Gate", style, switchHandleBitmap));
@@ -371,7 +374,7 @@ void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outp
     noiseGateActive ? mNoiseGateGain.Process(mOutputPointers, numChannelsInternal, numFrames) : mOutputPointers;
 
   sample** toneStackOutPointers = (toneStackActive && mToneStack != nullptr)
-                                    ? mToneStack->Process(gateGainOutput, numChannelsInternal, numFrames)
+                                    ? mToneStack->Process(gateGainOutput, numChannelsInternal, nFrames)
                                     : gateGainOutput;
 
   sample** irPointers = toneStackOutPointers;
