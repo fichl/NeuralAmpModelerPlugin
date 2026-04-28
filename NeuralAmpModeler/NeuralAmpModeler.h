@@ -6,6 +6,7 @@
 #include "../AudioDSPTools/dsp/wav.h"
 #include "../AudioDSPTools/dsp/ResamplingContainer/ResamplingContainer.h"
 #include "../NeuralAmpModelerCore/NAM/dsp.h"
+#include "../NeuralAmpModelerCore/NAM/slimmable.h"
 
 #include "Colors.h"
 #include "ToneStack.h"
@@ -51,6 +52,7 @@ enum EParams
   kTrebleFrequency,
   kShowFrequencySliders,
   kFollowTrackColor,
+  kSlim,
   kNumParams
 };
 
@@ -66,6 +68,9 @@ enum ECtrlTags
   kCtrlTagOutputMode,
   kCtrlTagCalibrateInput,
   kCtrlTagInputCalibrationLevel,
+  kCtrlTagSlimmableIcon,
+  kCtrlTagSlimOverlayBackdrop,
+  kCtrlTagSlimKnob,
   kNumCtrlTags
 };
 
@@ -101,13 +106,13 @@ class ResamplingNAM : public nam::DSP
 public:
   // Resampling wrapper around the NAM models
   ResamplingNAM(std::unique_ptr<nam::DSP> encapsulated, const double expected_sample_rate)
-  : nam::DSP(expected_sample_rate)
+  : nam::DSP(encapsulated->NumInputChannels(), encapsulated->NumOutputChannels(), expected_sample_rate)
   , mEncapsulated(std::move(encapsulated))
   , mResampler(GetNAMSampleRate(mEncapsulated))
   {
     // Assign the encapsulated object's processing function  to this object's member so that the resampler can use it:
     auto ProcessBlockFunc = [&](NAM_SAMPLE** input, NAM_SAMPLE** output, int numFrames) {
-      mEncapsulated->process(input[0], output[0], numFrames);
+      mEncapsulated->process(input, output, numFrames);
     };
     mBlockProcessFunc = ProcessBlockFunc;
 
@@ -139,7 +144,7 @@ public:
 
   void prewarm() override { mEncapsulated->prewarm(); };
 
-  void process(NAM_SAMPLE* input, NAM_SAMPLE* output, const int num_frames) override
+  void process(NAM_SAMPLE** input, NAM_SAMPLE** output, const int num_frames) override
   {
     if (num_frames > mMaxExternalBlockSize)
       // We can afford to be careful
@@ -151,7 +156,7 @@ public:
     }
     else
     {
-      mResampler.ProcessBlock(&input, &output, num_frames, mBlockProcessFunc);
+      mResampler.ProcessBlock(input, output, num_frames, mBlockProcessFunc);
     }
   };
 
@@ -172,6 +177,12 @@ public:
 
   // So that we can let the world know if we're resampling (useful for debugging)
   double GetEncapsulatedSampleRate() const { return GetNAMSampleRate(mEncapsulated); };
+
+  nam::SlimmableModel* GetSlimmableModel() { return dynamic_cast<nam::SlimmableModel*>(mEncapsulated.get()); }
+  const nam::SlimmableModel* GetSlimmableModel() const
+  {
+    return dynamic_cast<const nam::SlimmableModel*>(mEncapsulated.get());
+  }
 
 private:
   bool NeedToResample() const { return GetExpectedSampleRate() != GetEncapsulatedSampleRate(); };
@@ -250,6 +261,7 @@ private:
 
   void _SetInputGain();
   void _SetOutputGain();
+  void _ApplySlimParamToLoadedNAMs();
 
   // See: Unserialization.cpp
   void _UnserializeApplyConfig(nlohmann::json& config);
