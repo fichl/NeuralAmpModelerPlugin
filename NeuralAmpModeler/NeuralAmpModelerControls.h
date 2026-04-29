@@ -796,8 +796,8 @@ public:
       // Attach highlight color controls
       const auto colorArea =
         titleArea.GetFromTop(0.5f * height).GetFromLeft(0.5f * width).GetTranslated(0.0f, 47.0f).GetHPadded(-12.0f);
-      const auto highlightArea = colorArea.GetFromLeft(0.25f * width).GetHPadded(-25.0f).GetVPadded(-15.0f);
-      const auto trackcolorArea = colorArea.GetFromRight(0.25f * width).GetHPadded(-16.0f).GetVPadded(-15.0f);
+      const auto highlightArea = colorArea.GetFromLeft(0.225f * width).GetHPadded(-25.0f).GetVPadded(-15.0f);
+      const auto trackcolorArea = colorArea.GetFromRight(0.22f * width).GetHPadded(-16.0f).GetVPadded(-15.0f);
       ;
       AddNamedChildControl(
         new IVColorSwatchControl(highlightArea, "Highlight Color",
@@ -808,12 +808,14 @@ public:
                                      kMsgTagHighlightColor, kNoTag, colorCodeStr.GetLength(), colorCodeStr.Get());
                                    //GetChild(7)->SetValueToDefault(kFollowTrackColor); // better set value to false ??
                                  },
-                                 mStyle, IVColorSwatchControl::ECellLayout::kHorizontal, {kX1}, {""}),
+                                 mStyle.WithLabelText(IText(DEFAULT_TEXT_SIZE, COLOR_WHITE)), 
+                                 IVColorSwatchControl::ECellLayout::kHorizontal, {kX1}, {""}),
         mControlNames.highlightColor)
         ->SetTooltip("choose your favorite color \nfor the plugin controls"); 
 
       AddNamedChildControl(new IVToggleControl(trackcolorArea, kFollowTrackColor, "Follow Track Color",
-                                               style.WithColor(kFG, PluginColors::NAM_0)),
+                                               style.WithLabelText(IText(DEFAULT_TEXT_SIZE, COLOR_WHITE))
+                                               .WithColor(kFG, PluginColors::NAM_0)),
                            mControlNames.followTrackColor)->SetTooltip("use the color that you set for this track \nin your DAW for the plugin controls");  
     }
 

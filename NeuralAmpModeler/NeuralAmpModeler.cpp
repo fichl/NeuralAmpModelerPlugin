@@ -136,7 +136,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const auto irIconOffSVG = pGraphics->LoadSVG(IR_ICON_OFF_FN);
     const auto frequencySlidersIconOnSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_ON_FN);
     const auto frequencySlidersIconOffSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_OFF_FN);
-    const auto slimIconSVG = pGraphics->LoadSVG(SLIMMABLE_ICON_FN);
+ //   const auto slimIconSVG = pGraphics->LoadSVG(SLIMMABLE_ICON_FN);
 
     const auto backgroundBitmap = pGraphics->LoadBitmap(BACKGROUND_FN);
     const auto fileBackgroundBitmap = pGraphics->LoadBitmap(FILEBACKGROUND_FN);
@@ -173,11 +173,11 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
     // Area for frequency sliders
     const auto bassSliderArea =
-      bassKnobArea.SubRectVertical(2, 0).GetReducedFromBottom(2.0f).GetHPadded(-16.f).GetVShifted(-35.f);
+      bassKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
     const auto midSliderArea =
-      midKnobArea.SubRectVertical(2, 0).GetReducedFromBottom(2.0f).GetHPadded(-16.f).GetVShifted(-35.f);
+      midKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
     const auto trebleSliderArea =
-      trebleKnobArea.SubRectVertical(2, 0).GetReducedFromBottom(2.0f).GetHPadded(-16.f).GetVShifted(-35.f);
+      trebleKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
     const auto frequencySliderToggleArea =
       eqToggleArea.SubRectVertical(2, 0).GetPadded(-7.f).GetVShifted(31.f).GetHShifted(49.f);
 
@@ -188,7 +188,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const auto modelArea =
       contentArea.GetFromBottom((2.0f * fileHeight)).GetFromTop(fileHeight).GetMidHPadded(fileWidth).GetVShifted(-1);
     const auto slimIconArea =
-      IRECT(modelArea.R + 6.f, modelArea.MH() - 14.f, modelArea.R + 6.f + 2.f * 28.f, modelArea.MH() + 14.f);
+      IRECT(modelArea.R + 17.f, modelArea.MH() - 18.f, modelArea.R + 58.f, modelArea.MH() + 18.f);
     const auto modelIconArea = modelArea.GetFromLeft(30).GetTranslated(-40, 10);
     const auto irArea = modelArea.GetVShifted(irYOffset);
     const auto irSwitchArea = irArea.GetFromLeft(30.0f).GetHShifted(-40.0f).GetScaledAboutCentre(0.6f);
@@ -254,7 +254,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                                 fileBackgroundBitmap, globeSVG, "Get NAM Models", getUrl),
       kCtrlTagModelFileBrowser);
 
-    auto hideSlimOverlay = [](IControl* pCaller) {
+/*    auto hideSlimOverlay = [](IControl* pCaller) {
       IGraphics* ui = pCaller->GetUI();
       if (auto* backdrop = ui->GetControlWithTag(kCtrlTagSlimOverlayBackdrop))
         backdrop->Hide(true);
@@ -269,12 +269,16 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       if (auto* knob = ui->GetControlWithTag(kCtrlTagSlimKnob))
         knob->Hide(false);
       ui->SetAllControlsDirty();
-    };
+    };*/
 
     pGraphics
-      ->AttachControl(
-        new NAMSquareButtonControl(slimIconArea, DefaultClickActionFunc, slimIconSVG), kCtrlTagSlimmableIcon)
-      ->SetAnimationEndActionFunction(showSlimOverlay)
+      ->AttachControl(new IVSliderControl(slimIconArea, kSlim, "Slimable",
+                                                 style.WithColor(kFG, PluginColors::OFF_WHITE)
+                                                   .WithValueText(IText(DEFAULT_TEXT_SIZE - 1.f, EVAlign::Bottom,
+                                                                 PluginColors::NAM_THEMEFONTCOLOR))
+                                            .WithLabelText(IText(DEFAULT_TEXT_SIZE - 1.f, COLOR_WHITE)),
+                                                 true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
+                             kCtrlTagSlimmableIcon)
       ->Hide(true);
 
     pGraphics->AttachControl(new ISVGSwitchControl(irSwitchArea, {irIconOffSVG, irIconOnSVG}, kIRToggle));
@@ -338,12 +342,12 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                       kCtrlTagSettingsBox)
       ->Hide(true);
 
-    const auto slimKnobArea = b.GetCentredInside(100.f, NAM_KNOB_HEIGHT + 24.f);
+/*    const auto slimKnobArea = b.GetCentredInside(100.f, NAM_KNOB_HEIGHT + 24.f);
     pGraphics->AttachControl(new NAMSlimOverlayBackdropControl(b, hideSlimOverlay), kCtrlTagSlimOverlayBackdrop)
       ->Hide(true);
     pGraphics
       ->AttachControl(new NAMKnobControl(slimKnobArea, kSlim, "Slim", style, knobBackgroundBitmap), kCtrlTagSlimKnob)
-      ->Hide(true);
+      ->Hide(true);*/
 
     pGraphics->ForAllControlsFunc([](IControl* pControl) {
       pControl->SetMouseEventsWhenDisabled(true);
@@ -478,10 +482,10 @@ void NeuralAmpModeler::OnIdle()
       static_cast<NAMSettingsPageControl*>(pGraphics->GetControlWithTag(kCtrlTagSettingsBox))->ClearModelInfo();
       if (auto* p = pGraphics->GetControlWithTag(kCtrlTagSlimmableIcon))
         p->Hide(true);
-      if (auto* p = pGraphics->GetControlWithTag(kCtrlTagSlimOverlayBackdrop))
+/*      if (auto* p = pGraphics->GetControlWithTag(kCtrlTagSlimOverlayBackdrop))
         p->Hide(true);
       if (auto* p = pGraphics->GetControlWithTag(kCtrlTagSlimKnob))
-        p->Hide(true);
+        p->Hide(true);*/
       pGraphics->SetAllControlsDirty();
       mModelCleared = false;
     }
@@ -1067,6 +1071,7 @@ void NeuralAmpModeler::_UpdateControlsFromModel()
     {
       const bool show = mModel->GetSlimmableModel() != nullptr;
       pSlimIcon->Hide(!show);
+      pSlimIcon->SetDisabled(!show);
     }
   }
 }

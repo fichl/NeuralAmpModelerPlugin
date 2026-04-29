@@ -121,6 +121,11 @@ int _GetConfigFrom_0_7_14(const iplug::IByteChunk& chunk, int startPos, nlohmann
                                       "CalibrateInput",
                                       "InputCalibrationLevel",
                                       "OutputMode",
+                                      "BassFrequency",
+                                      "MiddleFrequency",
+                                      "TrebleFrequency",
+                                      "showFrquencySliders",
+                                      "followTrackColor"
                                       "Slim"};
 
   int pos = _UnserializePathsAndExpectedKeys(chunk, startPos, config, paramNames);
