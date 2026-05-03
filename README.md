@@ -1,6 +1,6 @@
 # Neural Amp Modeler Plug-in
 
-[![Build](https://github.com/sdatkinson/NeuralAmpModelerPlugin/actions/workflows/build-native.yml/badge.svg)](https://github.com/sdatkinson/NeuralAmpModelerPlugin/actions/workflows/build-native.yml)
+[![Build](https://github.com/fichl/NeuralAmpModelerPlugin/actions/workflows/build-native.yml/badge.svg)](https://github.com/fichl/NeuralAmpModelerPlugin/actions/workflows/build-native.yml)
 
 A VST3/AudioUnit plug-in\* for [Neural Amp Modeler](https://github.com/sdatkinson/neural-amp-modeler), built with [iPlug2](https://iplug2.github.io).
 
@@ -11,9 +11,21 @@ A VST3/AudioUnit plug-in\* for [Neural Amp Modeler](https://github.com/sdatkinso
 
 - individual theme colors per NAM instance
 - sliders to finetune the eq frequencies
+- slider for slimable models instead of the icon
 
 theme color can be set manually in the plugin settings or you can choose to follow the track color set in your DAW.
+
+![custom theme color](docs/custom_color.png)
+![follow track color](docs/follow_track_color.png)
+
 sliders for the bass, mid, and high frequencies can be shown by clicking on a tiny icon to the right of the "EQ" label.
+double clicking any slider will reset the slider to the default value.
+
+![frequency sliders](docs/frequency_sliders.png)
+
+the clickable slimable icon is replaced by another slider
+
+![slimable slider](docs/slimable_slider.png)
 
 ## Installation
 

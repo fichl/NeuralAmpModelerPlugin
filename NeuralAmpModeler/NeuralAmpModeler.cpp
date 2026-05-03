@@ -492,6 +492,7 @@ void NeuralAmpModeler::OnIdle()
   }
 
   // is it a bad idea to move this here from OnUIOpen ??
+  NAM_CUSTOMTHEMECOLOR = PluginColors::NAM_THEMECOLOR;  //why do i need to set it again here ???
   GetUI()->ForStandardControlsFunc([&](IControl* pControl) {
     if (auto* pVectorBase = pControl->As<IVectorBase>())
     {
@@ -511,8 +512,8 @@ void NeuralAmpModeler::OnIdle()
       pVectorBase->SetColor(kPR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.6f));
       pVectorBase->SetColor(kFR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.1f));
       pVectorBase->SetColor(kX3, NAM_CUSTOMTHEMECOLOR.WithContrast(0.1f));
-    }
-    pControl->GetUI()->SetAllControlsDirty();
+      pControl->GetUI()->SetAllControlsDirty();
+    }   
   });
 
 }
@@ -645,8 +646,8 @@ void NeuralAmpModeler::OnParamChangeUI(int paramIdx, EParamSource source)
             pVectorBase->SetColor(kPR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.6f));
             pVectorBase->SetColor(kFR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.1f));
             pVectorBase->SetColor(kX3, NAM_CUSTOMTHEMECOLOR.WithContrast(0.1f));
+            pControl->GetUI()->SetAllControlsDirty();
           }
-          pControl->GetUI()->SetAllControlsDirty();
         });
         break;
       case kIRToggle: pGraphics->GetControlWithTag(kCtrlTagIRFileBrowser)->SetDisabled(!active); break;
@@ -676,8 +677,8 @@ bool NeuralAmpModeler::OnMessage(int msgTag, int ctrlTag, int dataSize, const vo
             pVectorBase->SetColor(kPR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.6f));
             pVectorBase->SetColor(kFR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.1f));
             pVectorBase->SetColor(kX3, NAM_CUSTOMTHEMECOLOR.WithContrast(0.1f));
+            pControl->GetUI()->SetAllControlsDirty();
           }
-          pControl->GetUI()->SetAllControlsDirty();
         });
       }
 
