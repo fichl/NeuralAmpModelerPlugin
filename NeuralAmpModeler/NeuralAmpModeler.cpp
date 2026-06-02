@@ -100,7 +100,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   GetParam(kTrebleFrequency)->InitDouble("TrebleFrequency", 1800.0, 800.0, 6200.0, 0.5);
   GetParam(kShowFrequencySliders)->InitBool("showFrquencySliders", false);
   GetParam(kFollowTrackColor)->InitBool("followTrackColor", false);
-  GetParam(kSlim)->InitDouble("Slim", 1.0, 0.0, 1.0, 0.01);
+  GetParam(kSlim)->InitDouble("Slim", 0.0, 0.0, 1.0, 0.01);
 
   mNoiseGateTrigger.AddListener(&mNoiseGateGain);
 

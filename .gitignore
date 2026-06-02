@@ -13,3 +13,4 @@ mkcert*
 
 NeuralAmpModeler/*.wav
 NeuralAmpModeler/peaks/
+/NeuralAmpModeler/projects/NeuralAmpModeler-vst3.vcxproj.user
