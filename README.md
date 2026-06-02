@@ -29,7 +29,7 @@ the clickable slimable icon is replaced by another slider
 
 ## Installation
 
-Check the [Releases](https://github.com/sdatkinson/NeuralAmpModelerPlugin/releases) for pre-built installers for the plugin!
+Check the [Releases](https://github.com/fichl/NeuralAmpModelerPlugin/releases) for pre-built installers for the plugin!
 
 ## Supported Platforms
 
