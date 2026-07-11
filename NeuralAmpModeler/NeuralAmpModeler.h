@@ -68,9 +68,7 @@ enum ECtrlTags
   kCtrlTagOutputMode,
   kCtrlTagCalibrateInput,
   kCtrlTagInputCalibrationLevel,
-  kCtrlTagSlimmableIcon,
-  kCtrlTagSlimOverlayBackdrop,
-  kCtrlTagSlimKnob,
+  kCtrlTagSlimmableSlider,
   kNumCtrlTags
 };
 
@@ -217,6 +215,8 @@ public:
   void OnParamChange(int paramIdx) override;
   void OnParamChangeUI(int paramIdx, iplug::EParamSource source) override;
   bool OnMessage(int msgTag, int ctrlTag, int dataSize, const void* pData) override;
+  iplug::igraphics::IColor GetThemeColor() const;
+  void SetThemeColor(const iplug::igraphics::IColor& color);
 
 private:
   // Allocates mInputPointers and mOutputPointers
@@ -262,6 +262,9 @@ private:
   void _SetInputGain();
   void _SetOutputGain();
   void _ApplySlimParamToLoadedNAMs();
+
+  iplug::igraphics::IColor _ResolveNewThemeColor() const;
+  void _ApplyThemeColorToUI(bool force);
 
   // See: Unserialization.cpp
   void _UnserializeApplyConfig(nlohmann::json& config);
@@ -326,6 +329,7 @@ private:
   WDL_String mIRPath;
 
   WDL_String mHighLightColor{PluginColors::NAM_THEMECOLOR.ToColorCode()};
+  iplug::igraphics::IColor mThemeColor;
 
   std::unordered_map<std::string, double> mNAMParams = {{"Input", 0.0}, {"Output", 0.0}};
 

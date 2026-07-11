@@ -22,7 +22,7 @@ using namespace igraphics;
 
 const double kDCBlockerFrequency = 5.0;
 
-iplug::igraphics::IColor NAM_CUSTOMTHEMECOLOR = PluginColors::NAM_THEMECOLOR;
+iplug::igraphics::IColor mThemeColor = PluginColors::NAM_THEMECOLOR;
 
 // Styles
 const IVColorSpec colorSpec{
@@ -136,7 +136,6 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const auto irIconOffSVG = pGraphics->LoadSVG(IR_ICON_OFF_FN);
     const auto frequencySlidersIconOnSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_ON_FN);
     const auto frequencySlidersIconOffSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_OFF_FN);
- //   const auto slimIconSVG = pGraphics->LoadSVG(SLIMMABLE_ICON_FN);
 
     const auto backgroundBitmap = pGraphics->LoadBitmap(BACKGROUND_FN);
     const auto fileBackgroundBitmap = pGraphics->LoadBitmap(FILEBACKGROUND_FN);
@@ -172,12 +171,9 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const auto eqToggleArea = midKnobArea.GetVShifted(midKnobArea.H()).SubRectVertical(2, 0).GetReducedFromTop(10.0f);
 
     // Area for frequency sliders
-    const auto bassSliderArea =
-      bassKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
-    const auto midSliderArea =
-      midKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
-    const auto trebleSliderArea =
-      trebleKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
+    const auto bassSliderArea = bassKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
+    const auto midSliderArea = midKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
+    const auto trebleSliderArea = trebleKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
     const auto frequencySliderToggleArea =
       eqToggleArea.SubRectVertical(2, 0).GetPadded(-7.f).GetVShifted(31.f).GetHShifted(49.f);
 
@@ -254,31 +250,14 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                                 fileBackgroundBitmap, globeSVG, "Get NAM Models", getUrl),
       kCtrlTagModelFileBrowser);
 
-/*    auto hideSlimOverlay = [](IControl* pCaller) {
-      IGraphics* ui = pCaller->GetUI();
-      if (auto* backdrop = ui->GetControlWithTag(kCtrlTagSlimOverlayBackdrop))
-        backdrop->Hide(true);
-      if (auto* knob = ui->GetControlWithTag(kCtrlTagSlimKnob))
-        knob->Hide(true);
-      ui->SetAllControlsDirty();
-    };
-    auto showSlimOverlay = [](IControl* pCaller) {
-      IGraphics* ui = pCaller->GetUI();
-      if (auto* backdrop = ui->GetControlWithTag(kCtrlTagSlimOverlayBackdrop))
-        backdrop->Hide(false);
-      if (auto* knob = ui->GetControlWithTag(kCtrlTagSlimKnob))
-        knob->Hide(false);
-      ui->SetAllControlsDirty();
-    };*/
-
     pGraphics
       ->AttachControl(new IVSliderControl(slimIconArea, kSlim, "Slimable",
-                                                 style.WithColor(kFG, PluginColors::OFF_WHITE)
-                                                   .WithValueText(IText(DEFAULT_TEXT_SIZE - 1.f, EVAlign::Bottom,
+                                          style.WithColor(kFG, PluginColors::OFF_WHITE)
+                                            .WithValueText(IText(DEFAULT_TEXT_SIZE - 1.f, EVAlign::Bottom,
                                                                  PluginColors::NAM_THEMEFONTCOLOR))
                                             .WithLabelText(IText(DEFAULT_TEXT_SIZE - 1.f, COLOR_WHITE)),
-                                                 true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
-                             kCtrlTagSlimmableIcon)
+                                          true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
+                      kCtrlTagSlimmableSlider)
       ->Hide(true);
 
     pGraphics->AttachControl(new ISVGSwitchControl(irSwitchArea, {irIconOffSVG, irIconOnSVG}, kIRToggle));
@@ -342,13 +321,6 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                       kCtrlTagSettingsBox)
       ->Hide(true);
 
-/*    const auto slimKnobArea = b.GetCentredInside(100.f, NAM_KNOB_HEIGHT + 24.f);
-    pGraphics->AttachControl(new NAMSlimOverlayBackdropControl(b, hideSlimOverlay), kCtrlTagSlimOverlayBackdrop)
-      ->Hide(true);
-    pGraphics
-      ->AttachControl(new NAMKnobControl(slimKnobArea, kSlim, "Slim", style, knobBackgroundBitmap), kCtrlTagSlimKnob)
-      ->Hide(true);*/
-
     pGraphics->ForAllControlsFunc([](IControl* pControl) {
       pControl->SetMouseEventsWhenDisabled(true);
       pControl->SetMouseOverWhenDisabled(true);
@@ -361,7 +333,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
 NeuralAmpModeler::~NeuralAmpModeler()
 {
-  _DeallocateIOPointers();
+    _DeallocateIOPointers();
 }
 
 void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outputs, int nFrames)
@@ -460,8 +432,77 @@ void NeuralAmpModeler::OnReset()
   _UpdateLatency();
 }
 
+namespace
+{
+bool NAMColorsEqual(const IColor& lhs, const IColor& rhs)
+{ return lhs.A == rhs.A && lhs.R == rhs.R && lhs.G == rhs.G && lhs.B == rhs.B; }
+} // namespace
+
+IColor NeuralAmpModeler::GetThemeColor() const
+{ return mThemeColor; }
+
+void NeuralAmpModeler::SetThemeColor(const IColor& color)
+{ mThemeColor = color; }
+
+IColor NeuralAmpModeler::_ResolveNewThemeColor() const
+{
+  if (GetParam(kFollowTrackColor)->Bool())
+  {
+    int r = 0;
+    int g = 0;
+    int b = 0;
+    const_cast<NeuralAmpModeler*>(this)->GetTrackColor(r, g, b);
+
+    if (r != 0 || g != 0 || b != 0)
+      return IColor(255, r, g, b);
+  }
+
+  if (mHighLightColor.GetLength() > 0)
+  {
+    try
+    {
+      return IColor::FromColorCodeStr(mHighLightColor.Get());
+    }
+    catch (...)
+    {
+      return PluginColors::NAM_THEMECOLOR;
+    }
+  }
+
+  return PluginColors::NAM_THEMECOLOR;
+}
+
+void NeuralAmpModeler::_ApplyThemeColorToUI(bool force)
+{
+  auto* ui = GetUI();
+  if (ui == nullptr)
+    return;
+
+  const IColor themeColor = _ResolveNewThemeColor();
+  if (!force && NAMColorsEqual(themeColor, mThemeColor))
+    return;
+
+  mThemeColor = themeColor;
+  SetThemeColor(themeColor);
+
+  ui->ForStandardControlsFunc([&](IControl* pControl) {
+    if (auto* pVectorBase = pControl->As<IVectorBase>())
+    {
+      pVectorBase->SetColor(kX1, themeColor);
+      pVectorBase->SetColor(kPR, themeColor.WithOpacity(0.6f));
+      pVectorBase->SetColor(kFR, themeColor.WithOpacity(0.1f));
+      pVectorBase->SetColor(kX3, themeColor.WithContrast(0.1f));
+      pVectorBase->SetColor(kOFF, themeColor.WithOpacity(0.1f));
+    }
+  });
+
+  ui->SetAllControlsDirty();
+}
+
 void NeuralAmpModeler::OnIdle()
 {
+  if (GetParam(kFollowTrackColor)->Bool())
+    _ApplyThemeColorToUI(false);
   mInputSender.TransmitData(*this);
   mOutputSender.TransmitData(*this);
 
@@ -480,42 +521,12 @@ void NeuralAmpModeler::OnIdle()
       // FIXME -- need to disable only the "normalized" model
       // pGraphics->GetControlWithTag(kCtrlTagOutputMode)->SetDisabled(false);
       static_cast<NAMSettingsPageControl*>(pGraphics->GetControlWithTag(kCtrlTagSettingsBox))->ClearModelInfo();
-      if (auto* p = pGraphics->GetControlWithTag(kCtrlTagSlimmableIcon))
+      if (auto* p = pGraphics->GetControlWithTag(kCtrlTagSlimmableSlider))
         p->Hide(true);
-/*      if (auto* p = pGraphics->GetControlWithTag(kCtrlTagSlimOverlayBackdrop))
-        p->Hide(true);
-      if (auto* p = pGraphics->GetControlWithTag(kCtrlTagSlimKnob))
-        p->Hide(true);*/
       pGraphics->SetAllControlsDirty();
       mModelCleared = false;
     }
   }
-
-  // is it a bad idea to move this here from OnUIOpen ??
-  NAM_CUSTOMTHEMECOLOR = PluginColors::NAM_THEMECOLOR;  //why do i need to set it again here ???
-  GetUI()->ForStandardControlsFunc([&](IControl* pControl) {
-    if (auto* pVectorBase = pControl->As<IVectorBase>())
-    {
-      if (GetParam(kFollowTrackColor)->Value())
-      {
-        int r, g, b;
-        GetTrackColor(r, g, b);
-        if (r + g + b > 0) // is default color set in DAW ?
-          NAM_CUSTOMTHEMECOLOR = IColor(255, r, g, b);
-      }
-      else
-      {
-        if (mHighLightColor.GetLength())
-          NAM_CUSTOMTHEMECOLOR = IColor::FromColorCodeStr(mHighLightColor.Get());
-      }
-      pVectorBase->SetColor(kX1, NAM_CUSTOMTHEMECOLOR);
-      pVectorBase->SetColor(kPR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.6f));
-      pVectorBase->SetColor(kFR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.1f));
-      pVectorBase->SetColor(kX3, NAM_CUSTOMTHEMECOLOR.WithContrast(0.1f));
-      pControl->GetUI()->SetAllControlsDirty();
-    }   
-  });
-
 }
 
 bool NeuralAmpModeler::SerializeState(IByteChunk& chunk) const
@@ -623,33 +634,7 @@ void NeuralAmpModeler::OnParamChangeUI(int paramIdx, EParamSource source)
       case kShowFrequencySliders:
         pGraphics->ForControlInGroup("NAM_Controls_FS", [active](IControl* pControl) { pControl->Hide(!active); });
         break;
-      case kFollowTrackColor:
-        GetUI()->ForStandardControlsFunc([&](IControl* pControl) {
-          if (auto* pVectorBase = pControl->As<IVectorBase>())
-          {
-            if (GetParam(kFollowTrackColor)->Value())
-            {
-              int r, g, b;
-              GetTrackColor(r, g, b);
-              if (r + g + b > 0) // is default color set in DAW ?
-                NAM_CUSTOMTHEMECOLOR = IColor(255, r, g, b);
-            }
-            else
-            {
-              if (mHighLightColor.GetLength())
-                NAM_CUSTOMTHEMECOLOR = IColor::FromColorCodeStr(mHighLightColor.Get());
-              else
-                NAM_CUSTOMTHEMECOLOR = PluginColors::NAM_THEMECOLOR;
-            }
-
-            pVectorBase->SetColor(kX1, NAM_CUSTOMTHEMECOLOR);
-            pVectorBase->SetColor(kPR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.6f));
-            pVectorBase->SetColor(kFR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.1f));
-            pVectorBase->SetColor(kX3, NAM_CUSTOMTHEMECOLOR.WithContrast(0.1f));
-            pControl->GetUI()->SetAllControlsDirty();
-          }
-        });
-        break;
+      case kFollowTrackColor: _ApplyThemeColorToUI(true); break;
       case kIRToggle: pGraphics->GetControlWithTag(kCtrlTagIRFileBrowser)->SetDisabled(!active); break;
       default: break;
     }
@@ -664,27 +649,19 @@ bool NeuralAmpModeler::OnMessage(int msgTag, int ctrlTag, int dataSize, const vo
     case kMsgTagClearIR: mShouldRemoveIR = true; return true;
     case kMsgTagHighlightColor:
     {
-      mHighLightColor.Set((const char*)pData);
+      if (pData != nullptr && dataSize > 0)
+        mHighLightColor.Set((const char*)pData);
 
       if (GetUI())
       {
-        GetUI()->ForStandardControlsFunc([&](IControl* pControl) {
-          if (auto* pVectorBase = pControl->As<IVectorBase>())
-          {
-            NAM_CUSTOMTHEMECOLOR = IColor::FromColorCodeStr(mHighLightColor.Get());
-
-            pVectorBase->SetColor(kX1, NAM_CUSTOMTHEMECOLOR);
-            pVectorBase->SetColor(kPR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.6f));
-            pVectorBase->SetColor(kFR, NAM_CUSTOMTHEMECOLOR.WithOpacity(0.1f));
-            pVectorBase->SetColor(kX3, NAM_CUSTOMTHEMECOLOR.WithContrast(0.1f));
-            pControl->GetUI()->SetAllControlsDirty();
-          }
-        });
+        GetParam(kFollowTrackColor)->Set(false);
+        SendParameterValueFromDelegate(kFollowTrackColor, 0.0, true);
+        _ApplyThemeColorToUI(true);
+        return true;
       }
-
-      return true;
+      return false;
+      default: return false;
     }
-    default: return false;
   }
 }
 
@@ -1068,11 +1045,10 @@ void NeuralAmpModeler::_UpdateControlsFromModel()
       c->SetCalibratedDisable(!mModel->HasOutputLevel());
     }
 
-    if (auto* pSlimIcon = pGraphics->GetControlWithTag(kCtrlTagSlimmableIcon))
+    if (auto* pSlimSlider = pGraphics->GetControlWithTag(kCtrlTagSlimmableSlider))
     {
       const bool show = mModel->GetSlimmableModel() != nullptr;
-      pSlimIcon->Hide(!show);
-      pSlimIcon->SetDisabled(!show);
+      pSlimSlider->Hide(!show);
     }
   }
 }

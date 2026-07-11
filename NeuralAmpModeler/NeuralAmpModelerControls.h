@@ -36,8 +36,9 @@ IRECT CornerButtonArea(const IRECT& rect)
 class NAMSquareButtonControl : public ISVGButtonControl
 {
 public:
-  NAMSquareButtonControl(const IRECT& bounds, IActionFunction af, const ISVG& svg)
+  NAMSquareButtonControl(const IRECT& bounds, IActionFunction af, const ISVG& svg, bool useThemeStroke = false)
   : ISVGButtonControl(bounds, af, svg, svg)
+  , mUseThemeStroke(useThemeStroke)
   {
   }
 
@@ -46,8 +47,19 @@ public:
     if (mMouseIsOver)
       g.FillRoundRect(PluginColors::MOUSEOVER, mRECT, 2.f);
 
-    ISVGButtonControl::Draw(g);
+    if (mUseThemeStroke)
+    {
+      IColor strokeColor = PLUG()->GetThemeColor();
+      g.DrawSVG(GetValue() > 0.5 ? mOnSVG : mOffSVG, mRECT, &mBlend, &strokeColor, nullptr);
+    }
+    else
+    {
+      ISVGButtonControl::Draw(g);
+    }
   }
+
+private:
+  bool mUseThemeStroke = false;
 };
 
 class NAMCircleButtonControl : public ISVGButtonControl
@@ -65,28 +77,6 @@ public:
 
     ISVGButtonControl::Draw(g);
   }
-};
-
-/// Full-window dim layer; click dismisses (used for Slim overlay).
-class NAMSlimOverlayBackdropControl : public IControl
-{
-public:
-  NAMSlimOverlayBackdropControl(const IRECT& bounds, IActionFunction dismiss)
-  : IControl(bounds, dismiss)
-  , mDismiss(dismiss)
-  {
-  }
-
-  void Draw(IGraphics& g) override { g.FillRect(COLOR_BLACK.WithOpacity(0.45f), mRECT); }
-
-  void OnMouseDown(float x, float y, const IMouseMod& mod) override
-  {
-    if (mDismiss)
-      mDismiss(this);
-  }
-
-private:
-  IActionFunction mDismiss;
 };
 
 class NAMKnobControl : public IVKnobControl, public IBitmapBase
@@ -255,7 +245,7 @@ public:
         WDL_String fullURL(url);
         pCaller->GetUI()->OpenURL(fullURL.Get());
       },
-      globeSVG)
+      globeSVG, true)
   {
     SetTooltip(label);
   }
