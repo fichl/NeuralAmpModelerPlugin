@@ -95,6 +95,7 @@
     <ClCompile Include="..\AudioDSPTools\dsp\wav.cpp">
       <Filter>dsp</Filter>
     </ClCompile>
+    <ClCompile Include="..\ToneStack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\resources\resource.h">
@@ -310,6 +311,10 @@
     </ClInclude>
     <ClInclude Include="..\AudioDSPTools\dsp\ResamplingContainer\Dependencies\WDL\wdltypes.h">
       <Filter>dsp\ResamplingContainer\Dependencies\WDL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ToneStack.h" />
+    <ClInclude Include="..\NeuralAmpModelerCore\NAM\get_dsp.h">
+      <Filter>NAM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
