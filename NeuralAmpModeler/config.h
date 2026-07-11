@@ -70,7 +70,6 @@
 #define GLOBE_ICON_FN "Globe.svg"
 #define FREQUENCYSLIDERS_ICON_ON_FN "FrequencySlidersOn.svg"
 #define FREQUENCYSLIDERS_ICON_OFF_FN "FrequencySlidersOff.svg"
-#define SLIMMABLE_ICON_FN "SlimmableIcon.svg"
 
 #define BACKGROUND_FN "Background.jpg"
 #define BACKGROUND2X_FN "Background@2x.jpg"
