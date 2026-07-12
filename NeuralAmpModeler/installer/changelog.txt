@@ -1,26 +1,7 @@
 NeuralAmpModeler changelog
-https://github.com/sdatkinson/NeuralAmpModelerPlugin
+https://github.com/fichl/NeuralAmpModelerPlugin/tree/playground_v2
 
-00/00/0000 - v0.5.5 Tweak UI
-12/10/2022 - v0.5.6 Tweak UI
-12/16/2022 - v0.5.7
-12/22/2022 - v0.5.8
-01/02/2023 - v0.6.0
-01/28/2023 - v0.6.1
-02/04/2023 - v0.6.2
-03/05/2023 - v0.7.0
-03/26/2023 - v0.7.1
-04/17/2023 - v0.7.2
-05/09/2023 - v0.7.3
-06/19/2023 - v0.7.4
-07/15/2023 - v0.7.5
-12/06/2023 - v0.7.6
-12/13/2023 - v0.7.7
-01/30/2024 - v0.7.8
-04/04/2024 - v0.7.9
-09/08/2024 - v0.7.10
-10/29/2024 - v0.7.11
-11/30/2024 - v0.7.12
-12/20/2024 - v0.7.13
-04/29/2026 - v0.7.14
-06/02/2026 - v0.7.15
+07/12/2026 - v0.7.15.1
+- themeable globe icon
+- added pdf manual
+- code cleanup

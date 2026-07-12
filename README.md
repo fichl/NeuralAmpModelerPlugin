@@ -6,6 +6,7 @@ A VST3/AudioUnit plug-in\* for [Neural Amp Modeler](https://github.com/sdatkinso
 
 - https://www.youtube.com/user/RunawayThumbtack
 - https://github.com/sdatkinson/neural-amp-modeler
+- https://www.neuralampmodeler.com
 
 ## Extra Features
 

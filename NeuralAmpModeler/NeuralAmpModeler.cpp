@@ -333,7 +333,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
 NeuralAmpModeler::~NeuralAmpModeler()
 {
-    _DeallocateIOPointers();
+  _DeallocateIOPointers();
 }
 
 void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outputs, int nFrames)
@@ -584,7 +584,6 @@ void NeuralAmpModeler::OnUIOpen()
   }
 
   if (mModel != nullptr)
-
   {
     _UpdateControlsFromModel();
   }

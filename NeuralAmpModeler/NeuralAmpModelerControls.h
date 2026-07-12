@@ -928,10 +928,10 @@ private:
       buildInfoStr.SetFormatted(100, "Version %s %s %s", verStr.Get(), PLUG()->GetArchStr(), PLUG()->GetAPIStr());
 
       AddChildControl(new IURLControl(GetRECT().SubRectVertical(5, 0), "NEURAL AMP MODELER",
-                                      "https://www.neuralampmodeler.com", mText, COLOR_TRANSPARENT,
+                                      "https://github.com/fichl/NeuralAmpModelerPlugin/tree/playground_v2", mText, COLOR_TRANSPARENT,
                                       PluginColors::HELP_TEXT_MO, PluginColors::HELP_TEXT_CLICKED));
       AddChildControl(new IVLabelControl(GetRECT().SubRectVertical(5, 1), "By Steven Atkinson - unofficial mod by fichl", mStyle));
-      AddChildControl(new IVLabelControl(GetRECT().SubRectVertical(5, 2), buildInfoStr.Get(), mStyle));
+      AddChildControl(new IVLabelControl(GetRECT().SubRectVertical(5, 2), "Version v0.7.15.1 x86-64 VST3" /*buildInfoStr.Get()*/, mStyle));
       AddChildControl(new IURLControl(GetRECT().SubRectVertical(5, 3),
                                       "Plug-in development: Steve Atkinson, Oli Larkin, ... ",
                                       "https://github.com/sdatkinson/NeuralAmpModelerPlugin/graphs/contributors", mText,
