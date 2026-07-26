@@ -37,7 +37,15 @@ echo ------------------------------------------------------------------
 echo Updating version numbers ...
 
 call python prepare_resources-win.py %DEMO%
+if errorlevel 1 (
+  echo prepare_resources-win.py failed.
+  exit /B 1
+)
 call python update_installer-win.py %DEMO%
+if errorlevel 1 (
+  echo update_installer-win.py failed.
+  exit /B 1
+)
 
 cd ..\
 
@@ -85,6 +93,11 @@ REM msbuild NeuralAmpModeler.sln /p:configuration=release /p:platform=win32 /nol
 REM echo Building 64 bit binaries...
 REM add projects with /t to build VST3 and AAX
 msbuild NeuralAmpModeler.sln /t:NeuralAmpModeler-app;NeuralAmpModeler-vst3 /p:configuration=release /p:platform=x64 /nologo /verbosity:minimal /fileLogger /m /flp:logfile=build-win.log;errorsonly;append
+if errorlevel 1 (
+  echo MSBuild failed.
+  if exist build-win.log type build-win.log
+  exit /B 1
+)
 
 REM --echo Copying AAX Presets
 
@@ -125,8 +138,10 @@ echo Making Installer ...
   echo Making Zip File ...
 )
 
-FOR /F "tokens=* USEBACKQ" %%F IN (`call python scripts\makezip-win.py %DEMO% %ZIP%`) DO (
-SET ZIP_NAME=%%F
+call python scripts\makezip-win.py %DEMO% %ZIP%
+if errorlevel 1 (
+  echo Failed to make zip.
+  exit /B 1
 )
 
 echo ------------------------------------------------------------------
@@ -140,6 +155,6 @@ echo Usage: %0 [demo/full] [zip/installer]
 exit /B 1
 
 :SUCCESS
-echo %ZIP_NAME%
+echo Build distribution completed.
 
 exit /B 0

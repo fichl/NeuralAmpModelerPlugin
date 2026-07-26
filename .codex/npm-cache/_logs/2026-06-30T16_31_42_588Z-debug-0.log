@@ -1,0 +1,77 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.9.0
+2 info using node@v25.6.1
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:D:\NAM-OS\NAM-Oversampler\.npmrc
+5 silly config load:file:C:\Users\carme\.npmrc
+6 silly config load:file:C:\Users\carme\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm ci
+8 verbose argv "ci"
+9 verbose logfile logs-max:10 dir:D:\NAM-OS\NAM-Oversampler\.codex\npm-cache\_logs\2026-06-30T16_31_42_588Z-
+10 verbose logfile D:\NAM-OS\NAM-Oversampler\.codex\npm-cache\_logs\2026-06-30T16_31_42_588Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 verbose loadVirtual Error: loadVirtual requires existing shrinkwrap file
+13 verbose loadVirtual     at Arborist.loadVirtual (C:\Program Files\nodejs\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\load-virtual.js:42:18)
+13 verbose loadVirtual     at async CI.exec (C:\Program Files\nodejs\node_modules\npm\lib\commands\ci.js:50:5)
+13 verbose loadVirtual     at async Npm.exec (C:\Program Files\nodejs\node_modules\npm\lib\npm.js:208:9)
+13 verbose loadVirtual     at async module.exports (C:\Program Files\nodejs\node_modules\npm\lib\cli\entry.js:67:5)
+14 verbose stack Error: 
+14 verbose stack The `npm ci` command can only install with an existing package-lock.json or
+14 verbose stack npm-shrinkwrap.json with lockfileVersion >= 1. Run an install with npm@5 or
+14 verbose stack later to generate a package-lock.json file, then try again.
+14 verbose stack
+14 verbose stack Clean install a project
+14 verbose stack
+14 verbose stack Usage:
+14 verbose stack npm ci
+14 verbose stack
+14 verbose stack Options:
+14 verbose stack [--install-strategy <hoisted|nested|shallow|linked>] [--legacy-bundling]
+14 verbose stack [--global-style] [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+14 verbose stack [--include <prod|dev|optional|peer> [--include <prod|dev|optional|peer> ...]]
+14 verbose stack [--strict-peer-deps] [--foreground-scripts] [--ignore-scripts]
+14 verbose stack [--allow-git <all|none|root>] [--no-audit] [--no-bin-links] [--no-fund]
+14 verbose stack [--dry-run]
+14 verbose stack [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+14 verbose stack [--workspaces] [--include-workspace-root] [--install-links]
+14 verbose stack
+14 verbose stack aliases: clean-install, ic, install-clean, isntall-clean
+14 verbose stack
+14 verbose stack Run "npm help ci" for more info
+14 verbose stack     at CI.usageError (C:\Program Files\nodejs\node_modules\npm\lib\base-cmd.js:111:26)
+14 verbose stack     at C:\Program Files\nodejs\node_modules\npm\lib\commands\ci.js:56:18
+14 verbose stack     at async CI.exec (C:\Program Files\nodejs\node_modules\npm\lib\commands\ci.js:50:5)
+14 verbose stack     at async Npm.exec (C:\Program Files\nodejs\node_modules\npm\lib\npm.js:208:9)
+14 verbose stack     at async module.exports (C:\Program Files\nodejs\node_modules\npm\lib\cli\entry.js:67:5)
+15 error code EUSAGE
+16 error
+16 error The `npm ci` command can only install with an existing package-lock.json or
+16 error npm-shrinkwrap.json with lockfileVersion >= 1. Run an install with npm@5 or
+16 error later to generate a package-lock.json file, then try again.
+16 error
+16 error Clean install a project
+16 error
+16 error Usage:
+16 error npm ci
+16 error
+16 error Options:
+16 error [--install-strategy <hoisted|nested|shallow|linked>] [--legacy-bundling]
+16 error [--global-style] [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+16 error [--include <prod|dev|optional|peer> [--include <prod|dev|optional|peer> ...]]
+16 error [--strict-peer-deps] [--foreground-scripts] [--ignore-scripts]
+16 error [--allow-git <all|none|root>] [--no-audit] [--no-bin-links] [--no-fund]
+16 error [--dry-run]
+16 error [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+16 error [--workspaces] [--include-workspace-root] [--install-links]
+16 error
+16 error aliases: clean-install, ic, install-clean, isntall-clean
+16 error
+16 error Run "npm help ci" for more info
+17 verbose cwd D:\NAM-OS\NAM-Oversampler
+18 verbose os Windows_NT 10.0.26200
+19 verbose node v25.6.1
+20 verbose npm  v11.9.0
+21 verbose exit 1
+22 verbose code 1
+23 error A complete log of this run can be found in: D:\NAM-OS\NAM-Oversampler\.codex\npm-cache\_logs\2026-06-30T16_31_42_588Z-debug-0.log

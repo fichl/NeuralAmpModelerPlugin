@@ -10,26 +10,31 @@ on:
     #   - "v*"
 
 env:
-  PROJECT_NAME: NeuralAmpModeler
+  PROJECT_DIR: NeuralAmpModeler
+  ARTIFACT_NAME: NAM On Steroids
 
 jobs:
   build:
     name: Build-native-plugins
     runs-on: ${{matrix.os}}
     strategy:
+      fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-15, windows-2022, ubuntu-latest]
         include:
-          - os: macos-latest
+          - os: macos-15
             build_dir: build-mac
             artifact_ext: mac
-          - os: windows-latest
+          - os: windows-2022
             build_dir: build-win
             artifact_ext: win
+          - os: ubuntu-latest
+            build_dir: build-linux
+            artifact_ext: linux
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v6
       with:
         submodules: recursive
 
@@ -46,28 +51,35 @@ jobs:
       shell: bash
 
     - name: Build macOS
-      if: matrix.os == 'macOS-latest'
+      if: matrix.os == 'macos-15'
       run: |
-        cd ${{env.PROJECT_NAME}}/scripts
+        cd ${{env.PROJECT_DIR}}/scripts
         ./makedist-mac.sh full zip
       shell: bash
 
+    - name: Build Linux VST3
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        cd ${{env.PROJECT_DIR}}/scripts
+        bash ./makedist-linux.sh
+      shell: bash
+
     - name: Add msbuild to PATH (Windows)
-      if: matrix.os == 'windows-latest'
-      uses: microsoft/setup-msbuild@v1.0.2
+      if: matrix.os == 'windows-2022'
+      uses: microsoft/setup-msbuild@v3
 
     - name: Build Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2022'
       run: |
-        cd ${{env.PROJECT_NAME}}\scripts
+        cd ${{env.PROJECT_DIR}}\scripts
         .\makedist-win.bat full zip
       shell: pwsh
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
-        name: ${{env.PROJECT_NAME}}-${{matrix.artifact_ext}}
-        path: ${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out
+        name: ${{env.ARTIFACT_NAME}}-${{matrix.artifact_ext}}
+        path: ${{env.PROJECT_DIR}}/${{matrix.build_dir}}/out
 
   # test:
   #   name: Test Native
@@ -86,7 +98,7 @@ jobs:
   #     - name: Download artifact
   #       uses: actions/download-artifact@v2
   #       with:
-  #         name: ${{env.PROJECT_NAME}}-${{matrix.artifact_ext}}
+  #         name: ${{env.ARTIFACT_NAME}}-${{matrix.artifact_ext}}
 
   #     - name: Unzip files
   #       run: |
@@ -98,11 +110,11 @@ jobs:
   #       run: |
   #         curl -L "https://github.com/Tracktion/pluginval/releases/download/latest_release/pluginval_macOS.zip" -o pluginval.zip
   #         unzip pluginval
-  #         pluginval.app/Contents/MacOS/pluginval --skip-gui-tests --validate-in-process --output-dir "./bin" --validate ${{env.PROJECT_NAME}}.vst3 || exit 1
+  #         pluginval.app/Contents/MacOS/pluginval --skip-gui-tests --validate-in-process --output-dir "./bin" --validate ${{env.ARTIFACT_NAME}}.vst3 || exit 1
   #         mkdir -p ~/Library/Audio/Plug-Ins/Components
-  #         mv ${{env.PROJECT_NAME}}.component ~/Library/Audio/Plug-Ins/Components
+  #         mv ${{env.ARTIFACT_NAME}}.component ~/Library/Audio/Plug-Ins/Components
   #         pgrep -x AudioComponentRegistrar >/dev/null && killall -9 AudioComponentRegistrar; echo "killed AudioComponentRegistrar" || echo "AudioComponentRegistrar Process not found"
-  #         pluginval.app/Contents/MacOS/pluginval --skip-gui-tests --validate-in-process --output-dir "./bin" --validate ~/Library/Audio/Plug-Ins/Components/${{env.PROJECT_NAME}}.component || exit 1
+  #         pluginval.app/Contents/MacOS/pluginval --skip-gui-tests --validate-in-process --output-dir "./bin" --validate ~/Library/Audio/Plug-Ins/Components/${{env.ARTIFACT_NAME}}.component || exit 1
   #       shell: bash
 
   #     - name: Pluginval (Windows)
@@ -110,12 +122,12 @@ jobs:
   #       run: |
   #         powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest https://github.com/Tracktion/pluginval/releases/download/latest_release/pluginval_Windows.zip -OutFile pluginval.zip"
   #         powershell -Command "Expand-Archive pluginval.zip -DestinationPath ."
-  #         pluginval.exe --skip-gui-tests --validate-in-process --output-dir "./bin" --validate ${{env.PROJECT_NAME}}.vst3
+  #         pluginval.exe --skip-gui-tests --validate-in-process --output-dir "./bin" --validate ${{env.ARTIFACT_NAME}}.vst3
   #         if %ERRORLEVEL% neq 0 exit /b 1
   #       shell: cmd
 
   #     - name: Upload artifact
   #       uses: actions/upload-artifact@v1
   #       with:
-  #         name: ${{env.PROJECT_NAME}}-${{matrix.artifact_ext}}-pluginval
+  #         name: ${{env.ARTIFACT_NAME}}-${{matrix.artifact_ext}}-pluginval
   #         path: ./bin/

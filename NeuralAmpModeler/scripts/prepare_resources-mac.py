@@ -11,9 +11,9 @@ import os, sys, shutil
 scriptpath = os.path.dirname(os.path.realpath(__file__))
 projectpath = os.path.abspath(os.path.join(scriptpath, os.pardir))
 
-IPLUG2_ROOT = "../../iPlug2"
+iplug2_root = os.path.abspath(os.path.join(projectpath, os.pardir, "iPlug2"))
 
-sys.path.insert(0, os.path.join(os.getcwd(), IPLUG2_ROOT + "/Scripts"))
+sys.path.insert(0, os.path.join(iplug2_root, "Scripts"))
 
 from parse_config import parse_config
 

@@ -7,7 +7,8 @@ on:
       - "v*"
 
 env:
-  PROJECT_NAME: NeuralAmpModeler
+  PROJECT_DIR: NeuralAmpModeler
+  ARTIFACT_NAME: NAM On Steroids
 
 jobs:
   create_release:
@@ -17,7 +18,7 @@ jobs:
       upload_url: ${{steps.create_release.outputs.upload_url}}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -30,24 +31,27 @@ jobs:
           draft: true
           tag_name: ${{github.ref}}
           release_name: Release ${{github.ref}}
-          body_path: ${{env.PROJECT_NAME}}/installer/changelog.txt
+          body_path: ${{env.PROJECT_DIR}}/installer/changelog.txt
 
   build:
     name: Build
     needs: create_release
     runs-on: ${{matrix.os}}
     strategy:
+      fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-15, windows-2022, ubuntu-latest]
         include:
-          - os: macos-latest
+          - os: macos-15
             build_dir: build-mac
-          - os: windows-latest
+          - os: windows-2022
             build_dir: build-win
+          - os: ubuntu-latest
+            build_dir: build-linux
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v6
       with:
         submodules: recursive
 
@@ -65,85 +69,108 @@ jobs:
 
     - name: Get Archive Name macOS
       id: mac_archivename_step
-      if: matrix.os == 'macOS-latest'
+      if: matrix.os == 'macos-15'
       run: |
-        ARCHIVE_NAME=`python3 iPlug2/Scripts/get_archive_name.py ${{env.PROJECT_NAME}} mac full`
+        ARCHIVE_NAME=`python3 iPlug2/Scripts/get_archive_name.py ${{env.PROJECT_DIR}} mac full`
         echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Build macOS
-      if: matrix.os == 'macOS-latest'
+      if: matrix.os == 'macos-15'
       run: |
-        cd ${{env.PROJECT_NAME}}/scripts
+        cd ${{env.PROJECT_DIR}}/scripts
         ./makedist-mac.sh full installer
       shell: bash
 
-    - name: Upload mac DSYMs release asset
-      if: matrix.os == 'macOS-latest'
+    - name: Build Linux VST3
+      if: matrix.os == 'ubuntu-latest'
+      id: linux_build_step
+      run: |
+        cd ${{env.PROJECT_DIR}}/scripts
+        bash ./makedist-linux.sh
+        ZIP_PATH="$(find ../build-linux/out -maxdepth 1 -name '*-linux-vst3.zip' -print -quit)"
+        test -n "$ZIP_PATH"
+        echo "zip_path=$ZIP_PATH" >> $GITHUB_OUTPUT
+        echo "zip_name=$(basename "$ZIP_PATH")" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Upload Linux VST3 release asset
+      if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       with:
         upload_url: ${{needs.create_release.outputs.upload_url}}
-        asset_path: ${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out/${{steps.mac_archivename_step.outputs.archive_name}}-dSYMs.zip
+        asset_path: ${{steps.linux_build_step.outputs.zip_path}}
+        asset_name: ${{steps.linux_build_step.outputs.zip_name}}
+        asset_content_type: application/zip
+
+    - name: Upload mac DSYMs release asset
+      if: matrix.os == 'macos-15'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      with:
+        upload_url: ${{needs.create_release.outputs.upload_url}}
+        asset_path: ${{env.PROJECT_DIR}}/${{matrix.build_dir}}/out/${{steps.mac_archivename_step.outputs.archive_name}}-dSYMs.zip
         asset_name: ${{steps.mac_archivename_step.outputs.archive_name}}-dSYMs.zip
         asset_content_type: application/zip
 
     - name: Upload mac dmg release asset
-      if: matrix.os == 'macOS-latest'
+      if: matrix.os == 'macos-15'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       with:
         upload_url: ${{needs.create_release.outputs.upload_url}}
-        asset_path: ${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out/${{steps.mac_archivename_step.outputs.archive_name}}.dmg
+        asset_path: ${{env.PROJECT_DIR}}/${{matrix.build_dir}}/out/${{steps.mac_archivename_step.outputs.archive_name}}.dmg
         asset_name: ${{steps.mac_archivename_step.outputs.archive_name}}.dmg
         asset_content_type: application/octet-stream
 
     - name: Add msbuild to PATH (Windows)
-      if: matrix.os == 'windows-latest'
-      uses: microsoft/setup-msbuild@v1.0.2
+      if: matrix.os == 'windows-2022'
+      uses: microsoft/setup-msbuild@v3
 
     - name: Setup Python3
-      if: matrix.os == 'windows-latest'
-      uses: actions/setup-python@v2
+      if: matrix.os == 'windows-2022'
+      uses: actions/setup-python@v6
       with:
         python-version: '3.x'
         architecture: 'x64'
 
     - name: Get Archive Name Windows
       id: win_archivename_step
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2022'
       run: |
-        ARCHIVE_NAME=`python.exe iPlug2/Scripts/get_archive_name.py ${{env.PROJECT_NAME}} win full`
+        ARCHIVE_NAME=`python.exe iPlug2/Scripts/get_archive_name.py ${{env.PROJECT_DIR}} win full`
         echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Build Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2022'
       run: |
-        cd ${{env.PROJECT_NAME}}\scripts
+        cd ${{env.PROJECT_DIR}}\scripts
         .\makedist-win.bat full installer
       shell: pwsh
 
     - name: Upload Windows pdb release asset
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2022'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       with:
         upload_url: ${{needs.create_release.outputs.upload_url}}
-        asset_path: ${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out/${{steps.win_archivename_step.outputs.archive_name}}-pdbs.zip
+        asset_path: ${{env.PROJECT_DIR}}/${{matrix.build_dir}}/out/${{steps.win_archivename_step.outputs.archive_name}}-pdbs.zip
         asset_name: ${{steps.win_archivename_step.outputs.archive_name}}-pdbs.zip
         asset_content_type: application/zip
 
     - name: Upload Windows zip release asset
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2022'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       with:
         upload_url: ${{needs.create_release.outputs.upload_url}}
-        asset_path: ${{env.PROJECT_NAME}}/${{matrix.build_dir}}/out/${{steps.win_archivename_step.outputs.archive_name}}.zip
+        asset_path: ${{env.PROJECT_DIR}}/${{matrix.build_dir}}/out/${{steps.win_archivename_step.outputs.archive_name}}.zip
         asset_name: ${{steps.win_archivename_step.outputs.archive_name}}.zip
         asset_content_type: application/zip

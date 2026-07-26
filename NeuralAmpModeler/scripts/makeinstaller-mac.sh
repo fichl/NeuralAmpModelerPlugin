@@ -26,8 +26,16 @@ if [ "$VERSION" == "" ]; then
   exit 1
 fi
 
-PRODUCT_NAME=NeuralAmpModeler
+PROJECT_NAME=${PROJECT_NAME:-$(basename "$PWD")}
+PRODUCT_NAME=$(sed -n 's/^#define BUNDLE_NAME "\(.*\)"/\1/p' config.h)
+if [[ -z "$PRODUCT_NAME" ]]; then
+  PRODUCT_NAME="$PROJECT_NAME"
+fi
 PKG_ID_PREFIX="${INSTALLER_PKG_ID_PREFIX:-com.StevenAtkinson}"
+INSTALLER_BACKGROUND="${PRODUCT_NAME}-installer-bg.png"
+if [[ ! -f "installer/${INSTALLER_BACKGROUND}" ]]; then
+  INSTALLER_BACKGROUND="${PROJECT_NAME}-installer-bg.png"
+fi
 
 # locations
 PRODUCTS="build-mac"
@@ -59,6 +67,18 @@ if [[ ! -d ${PKG_DIR} ]]; then
   mkdir ${PKG_DIR}
 fi
 
+FOUND_PRODUCTS=0
+for product in "$VST3" "$AU" "$APP" "$AAX"; do
+  if [[ -d "$PRODUCTS/$product" ]]; then
+    FOUND_PRODUCTS=1
+  fi
+done
+
+if [[ "$FOUND_PRODUCTS" -eq 0 ]]; then
+  echo "No ${PRODUCT_NAME} bundles found in ${PRODUCTS}; aborting installer build."
+  exit 1
+fi
+
 build_flavor()
 {
   TMPDIR=${TARGET_DIR}/tmp
@@ -69,8 +89,8 @@ build_flavor()
 
   echo --- BUILDING ${PRODUCT_NAME}_${flavor}.pkg ---
 
-  mkdir -p $TMPDIR
-  cp -R -L $PRODUCTS/$flavorprod $TMPDIR
+  mkdir -p "$TMPDIR"
+  cp -R -L "$PRODUCTS/$flavorprod" "$TMPDIR"
 
   case "$flavor" in
     VST3|AU|APP)
@@ -96,9 +116,9 @@ build_flavor()
       ;;
   esac
 
-  pkgbuild --root $TMPDIR --identifier $ident --version $VERSION --install-location $loc ${PKG_DIR}/${PRODUCT_NAME}_${flavor}.pkg #|| exit 1
+  pkgbuild --root "$TMPDIR" --identifier "$ident" --version "$VERSION" --install-location "$loc" "${PKG_DIR}/${PRODUCT_NAME}_${flavor}.pkg" #|| exit 1
 
-  rm -r $TMPDIR
+  rm -r "$TMPDIR"
 }
 
 # # try to build VST3 package
@@ -171,7 +191,7 @@ cat > ${TARGET_DIR}/distribution.xml << XMLEND
     <license file="license.rtf" mime-type="application/rtf"/>
     <readme file="readme-mac.rtf" mime-type="application/rtf"/>
     <welcome file="intro.rtf" mime-type="application/rtf"/>
-    <background file="${PRODUCT_NAME}-installer-bg.png" alignment="topleft" scaling="none"/>
+    <background file="${INSTALLER_BACKGROUND}" alignment="topleft" scaling="none"/>
     ${VST3_PKG_REF}
     ${AU_PKG_REF}
     ${AAX_PKG_REF}

@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\experiments\internal_phase_lab\internal_phase_lab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\activations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\container.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\conv1d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\convnet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\dsp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\get_dsp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\lstm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\ring_buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\wavenet\a2_fast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\wavenet\model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\NeuralAmpModelerCore\NAM\wavenet\slimmable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\NAM-OS\NAM-Oversampler\AudioDSPTools\dsp\wav.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\NAM-OS\NAM-Oversampler\experiments\internal_phase_lab\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{BECF2B57-5B85-3444-92CB-968DF9BE15E9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

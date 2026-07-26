@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4FFBB8F820863B0E00DDD0E7"
-               BuildableName = "NeuralAmpModeler.vst3"
+               BuildableName = "NAM On Steroids.vst3"
                BlueprintName = "VST3P"
                ReferencedContainer = "container:NeuralAmpModeler-macOS.xcodeproj">
             </BuildableReference>
@@ -51,7 +51,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4FFBB8F820863B0E00DDD0E7"
-            BuildableName = "NeuralAmpModeler.vst3"
+            BuildableName = "NAM On Steroids.vst3"
             BlueprintName = "VST3P"
             ReferencedContainer = "container:NeuralAmpModeler-macOS.xcodeproj">
          </BuildableReference>
@@ -73,7 +73,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4FFBB8F820863B0E00DDD0E7"
-            BuildableName = "NeuralAmpModeler.vst3"
+            BuildableName = "NAM On Steroids.vst3"
             BlueprintName = "VST3P"
             ReferencedContainer = "container:NeuralAmpModeler-macOS.xcodeproj">
          </BuildableReference>

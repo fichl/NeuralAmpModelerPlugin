@@ -135,32 +135,36 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "#include ""..\\config.h""\r\n"
     "ROBOTO_FN TTF ROBOTO_FN\r\n"
     "MICHROMA_FN TTF MICHROMA_FN\r\n"
     "FILE_FN SVG FILE_FN\r\n"
     "GEAR_FN SVG GEAR_FN\r\n"
+    "TUNER_FN SVG TUNER_FN\r\n"
     "GLOBE_ICON_FN SVG GLOBE_ICON_FN\r\n"
+    "BG_ICON_FN SVG BG_ICON_FN\r\n"
     "CLOSE_BUTTON_FN SVG CLOSE_BUTTON_FN\r\n"
     "LEFT_ARROW_FN SVG LEFT_ARROW_FN\r\n"
     "RIGHT_ARROW_FN SVG RIGHT_ARROW_FN\r\n"
     "MODEL_ICON_FN SVG MODEL_ICON_FN\r\n"
     "IR_ICON_ON_FN SVG IR_ICON_ON_FN\r\n"
     "IR_ICON_OFF_FN SVG IR_ICON_OFF_FN\r\n"
+    "LINK_ICON_FN SVG LINK_ICON_FN\r\n"
     "SLIMMABLE_ICON_FN SVG SLIMMABLE_ICON_FN\r\n"
+    "TTS_LOGO_FN PNG TTS_LOGO_FN\r\n"
     "BACKGROUND_FN JPG BACKGROUND_FN\r\n"
     "BACKGROUND2X_FN JPG BACKGROUND2X_FN\r\n"
     "BACKGROUND3X_FN JPG BACKGROUND3X_FN\r\n"
@@ -181,7 +185,8 @@ BEGIN
     "SLIDESWITCHHANDLE3X_FN PNG SLIDESWITCHHANDLE3X_FN\r\n"
     "METERBACKGROUND_FN PNG METERBACKGROUND_FN\r\n"
     "METERBACKGROUND2X_FN PNG METERBACKGROUND2X_FN\r\n"
-    "METERBACKGROUND3X_FN PNG METERBACKGROUND3X_FN\0"
+    "METERBACKGROUND3X_FN PNG METERBACKGROUND3X_FN\r\n"
+    "\"ThirdPartyNotices.txt\" TXT \"..\\installer\\ThirdPartyNotices.txt\"\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -208,7 +213,7 @@ BEGIN
     "B",            ID_SHOW_BOUNDS,         VIRTKEY, CONTROL, NOINVERT
     "D",            ID_SHOW_DRAWN,          VIRTKEY, CONTROL, NOINVERT
     "F",            ID_SHOW_FPS,            VIRTKEY, CONTROL, NOINVERT
-    "E",            ID_LIVE_EDIT,           VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_LIVE_EDIT,            VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -218,8 +223,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,1,0
- PRODUCTVERSION 0,0,1,0
+ FILEVERSION 2,3,1,0
+ PRODUCTVERSION 2,3,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -234,12 +239,12 @@ BEGIN
     BEGIN
         BLOCK "040004e4"
         BEGIN
-            VALUE "FileVersion", "0.0.1"
-            VALUE "ProductVersion", "0.0.1"
-            VALUE "FileDescription", "NeuralAmpModeler"
-            VALUE "InternalName", "NeuralAmpModeler"
-            VALUE "ProductName", "NeuralAmpModeler"
-            VALUE "CompanyName", "StevenAtkinson"
+            VALUE "FileVersion", "2.3.1"
+            VALUE "ProductVersion", "2.3.1"
+            VALUE "FileDescription", "NAM On Steroids"
+            VALUE "InternalName", "NAM On Steroids"
+            VALUE "ProductName", "NAM On Steroids"
+            VALUE "CompanyName", "The Tone Scientist"
             VALUE "LegalCopyright", "Copyright 2020 Acme Inc"
             VALUE "LegalTrademarks", "VST is a trademark of Steinberg Media Technologies GmbH, Audio Unit is a trademark of Apple, Inc."
         END
@@ -265,14 +270,18 @@ ROBOTO_FN TTF ROBOTO_FN
 MICHROMA_FN TTF MICHROMA_FN
 FILE_FN SVG FILE_FN
 GEAR_FN SVG GEAR_FN
+TUNER_FN SVG TUNER_FN
 GLOBE_ICON_FN SVG GLOBE_ICON_FN
+BG_ICON_FN SVG BG_ICON_FN
 CLOSE_BUTTON_FN SVG CLOSE_BUTTON_FN
 LEFT_ARROW_FN SVG LEFT_ARROW_FN
 RIGHT_ARROW_FN SVG RIGHT_ARROW_FN
 MODEL_ICON_FN SVG MODEL_ICON_FN
 IR_ICON_ON_FN SVG IR_ICON_ON_FN
 IR_ICON_OFF_FN SVG IR_ICON_OFF_FN
+LINK_ICON_FN SVG LINK_ICON_FN
 SLIMMABLE_ICON_FN SVG SLIMMABLE_ICON_FN
+TTS_LOGO_FN PNG TTS_LOGO_FN
 BACKGROUND_FN JPG BACKGROUND_FN
 BACKGROUND2X_FN JPG BACKGROUND2X_FN
 BACKGROUND3X_FN JPG BACKGROUND3X_FN
@@ -294,6 +303,6 @@ SLIDESWITCHHANDLE3X_FN PNG SLIDESWITCHHANDLE3X_FN
 METERBACKGROUND_FN PNG METERBACKGROUND_FN
 METERBACKGROUND2X_FN PNG METERBACKGROUND2X_FN
 METERBACKGROUND3X_FN PNG METERBACKGROUND3X_FN
+"ThirdPartyNotices.txt" TXT "..\\installer\\ThirdPartyNotices.txt"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-

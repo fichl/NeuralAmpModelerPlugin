@@ -6,10 +6,9 @@ import plistlib, os, datetime, fileinput, glob, sys, string
 
 scriptpath = os.path.dirname(os.path.realpath(__file__))
 projectpath = os.path.abspath(os.path.join(scriptpath, os.pardir))
+iplug2_root = os.path.abspath(os.path.join(projectpath, os.pardir, "iPlug2"))
 
-IPLUG2_ROOT = "../../iPlug2"
-
-sys.path.insert(0, os.path.join(os.getcwd(), IPLUG2_ROOT + "/Scripts"))
+sys.path.insert(0, os.path.join(iplug2_root, "Scripts"))
 
 from parse_config import parse_config
 
@@ -38,6 +37,7 @@ def main():
 
     config = parse_config(projectpath)
     bundle_name = config["BUNDLE_NAME"]
+    project_name = os.path.basename(projectpath)
     display_name = env_or_default("INSTALLER_DISPLAY_NAME", bundle_name)
     installer_suffix = " Demo" if demo else ""
     default_output_name = display_name + installer_suffix + " Installer"
@@ -83,9 +83,11 @@ def main():
     # WIN INSTALLER
     print("Updating Windows Installer version info...")
 
-    for line in fileinput.input(
-        projectpath + "/installer/" + bundle_name + ".iss", inplace=1
-    ):
+    installer_script = os.path.join(projectpath, "installer", bundle_name + ".iss")
+    if not os.path.exists(installer_script):
+        installer_script = os.path.join(projectpath, "installer", project_name + ".iss")
+
+    for line in fileinput.input(installer_script, inplace=1):
         if "=" in line:
             key = line.split("=", 1)[0]
             if key in setup_values:

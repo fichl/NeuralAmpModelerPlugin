@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.4.33122.133
-MinimumVisualStudioVersion = 10.0.40219.1
+VisualStudioVersion = 1.5.0
+MinimumVisualStudioVersion = 1.5.0
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NeuralAmpModeler-app", "projects\NeuralAmpModeler-app.vcxproj", "{41785AE4-5B70-4A75-880B-4B418B4E13C6}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NeuralAmpModeler-vst3", "projects\NeuralAmpModeler-vst3.vcxproj", "{079FC65A-F0E5-4E97-B318-A16D1D0B89DF}"

@@ -52,9 +52,9 @@ const iplug::igraphics::IColor OFF_WHITE(255, 243, 246, 249); // Material UI bec
 // Pantone const iplug::igraphics::IColor NAM_3(255, 218, 203, 246);  //
 // Lavender Blue
 
-// Blue mode
+// Red mode
 const iplug::igraphics::IColor NAM_1(255, 29, 26, 31); // Raisin Black
-const iplug::igraphics::IColor NAM_2(255, 80, 133, 232); // Azure
+const iplug::igraphics::IColor NAM_2(255, 191, 0, 0); // Red
 const iplug::igraphics::IColor NAM_3(255, 162, 178, 191); // Cadet Blue Crayola
 // Alts
 // const iplug::igraphics::IColor NAM_1(255, 18, 17, 19);  // Smoky Black
@@ -69,7 +69,7 @@ const iplug::igraphics::IColor NAM_3(255, 162, 178, 191); // Cadet Blue Crayola
 
 // Evan Heritage theme colors
 const iplug::igraphics::IColor NAM_0(0, 18, 17, 19); // Transparent
-const iplug::igraphics::IColor NAM_THEMECOLOR(255, 80, 133, 232); // Azure
+const iplug::igraphics::IColor NAM_THEMECOLOR(255, 191, 0, 0); // Red
 // const iplug::igraphics::IColor NAM_THEMECOLOR(255, 23, 190, 187); // Custom :)
 const iplug::igraphics::IColor NAM_THEMEFONTCOLOR(255, 242, 242, 242); // Dark White
 

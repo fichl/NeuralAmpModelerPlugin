@@ -1,0 +1,10 @@
+^D:\NAM-OS\NAM-OVERSAMPLER\EXPERIMENTS\INTERNAL_PHASE_LAB\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/NAM-OS/NAM-Oversampler/experiments/internal_phase_lab -BD:/NAM-OS/NAM-Oversampler/.codex/internal_phase_lab_build --check-stamp-file D:/NAM-OS/NAM-Oversampler/.codex/internal_phase_lab_build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
