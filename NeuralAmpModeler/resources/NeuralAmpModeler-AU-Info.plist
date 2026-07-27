@@ -20,17 +20,17 @@
 			<key>type</key>
 			<string>aumf</string>
 			<key>version</key>
-			<integer>131841</integer>
+			<integer>131842</integer>
 		</dict>
 	</array>
 	<key>AudioUnit Version</key>
-	<string>0x00020301</string>
+	<string>0x00020302</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>NAM On Steroids</string>
 	<key>CFBundleGetInfoString</key>
-	<string>NAM On Steroids v2.3.1 Copyright 2022 Steven Atkinson</string>
+	<string>NAM On Steroids v2.3.2 Copyright 2022 Steven Atkinson</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.TheToneScientist.audiounit.NAMOnSteroids</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -40,11 +40,11 @@
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.3.1</string>
+	<string>2.3.2</string>
 	<key>CFBundleSignature</key>
 	<string>1YEo</string>
 	<key>CFBundleVersion</key>
-	<string>2.3.1</string>
+	<string>2.3.2</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LSMinimumSystemVersion</key>

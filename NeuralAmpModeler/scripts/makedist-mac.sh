@@ -255,7 +255,7 @@ if [ $CODESIGN == 1 ]; then
   #---------------------------------------------------------------------------------------------------------
 
   #---------------------------------------------------------------------------------------------------------
-  echo "code-sign binaries"
+  echo "code-sign binaries with Developer ID"
   echo ""
 
   codesign --force -s "${DEV_ID_APP_STR}" -v "$APP" --deep --strict --options=runtime #hardened runtime for app
@@ -264,6 +264,21 @@ if [ $CODESIGN == 1 ]; then
   xattr -cr "$VST3"
   codesign --force -s "${DEV_ID_APP_STR}" -v "$VST3" --deep --strict
   #---------------------------------------------------------------------------------------------------------
+else
+  echo "ad-hoc code-sign binaries for Apple Silicon (M1/M2/M3) compatibility"
+  echo ""
+  if [ -d "$AU" ]; then
+    xattr -cr "$AU" 2>/dev/null || true
+    codesign --force --deep --sign - "$AU" 2>/dev/null || true
+  fi
+  if [ -d "$VST3" ]; then
+    xattr -cr "$VST3" 2>/dev/null || true
+    codesign --force --deep --sign - "$VST3" 2>/dev/null || true
+  fi
+  if [ -d "$APP" ]; then
+    xattr -cr "$APP" 2>/dev/null || true
+    codesign --force --deep --sign - "$APP" 2>/dev/null || true
+  fi
 fi
 
 if [ $BUILD_INSTALLER == 1 ]; then

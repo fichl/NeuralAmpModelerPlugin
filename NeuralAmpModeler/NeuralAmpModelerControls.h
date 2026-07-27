@@ -123,6 +123,37 @@ public:
   }
 };
 
+class NAMPayPalDonateButtonControl : public IButtonControlBase, public IBitmapBase
+{
+public:
+  NAMPayPalDonateButtonControl(const IRECT& bounds, IActionFunction af, IBitmap bitmap)
+  : IButtonControlBase(bounds, af)
+  , IBitmapBase(bitmap)
+  {
+  }
+
+  void OnRescale() override { mBitmap = GetUI()->GetScaledBitmap(mBitmap); }
+
+  void Draw(IGraphics& g) override
+  {
+    if (mMouseIsOver)
+    {
+      g.DrawRoundRect(IColor(140, 255, 255, 255), mRECT.GetPadded(1.0f), 10.0f, nullptr, 1.5f);
+    }
+
+    g.DrawFittedBitmap(mBitmap, mRECT);
+
+    if (GetValue() > 0.5)
+    {
+      g.FillRoundRect(IColor(80, 255, 255, 255), mRECT, 10.0f);
+    }
+    else if (mMouseIsOver)
+    {
+      g.FillRoundRect(IColor(45, 255, 255, 255), mRECT, 10.0f);
+    }
+  }
+};
+
 class NAMOversamplingIndicatorControl : public IControl
 {
 public:
@@ -251,6 +282,10 @@ private:
 class NAMMidiCCMenuMixin
 {
 protected:
+  static constexpr int kMidiCCLearnTag = 9900;
+  static constexpr int kMidiCCNoneTag = 9901;
+  static constexpr int kMidiCCBaseTag = 10000;
+
   void AddMidiCCContextMenuItems(IControl* owner, IPopupMenu& contextMenu, int paramIdx)
   {
     auto* plug = owner != nullptr ? static_cast<NeuralAmpModeler*>(owner->GetDelegate()) : nullptr;
@@ -266,41 +301,79 @@ protected:
 
     mMidiCCContextMenuParamIdx = paramIdx;
     mMidiCCContextMenuStartIdx = contextMenu.NItems();
-    contextMenu.AddItem("MIDI CC Learn");
+
     const int assignedCC = plug->GetMidiCCForParam(paramIdx);
-    contextMenu.AddItem("MIDI CC None", -1,
-                        assignedCC < 0 ? IPopupMenu::Item::kChecked : IPopupMenu::Item::kNoFlags);
-    for (int cc = 0; cc < 128; ++cc)
+
+    contextMenu.AddItem(new IPopupMenu::Item("MIDI CC Learn", IPopupMenu::Item::kNoFlags, kMidiCCLearnTag));
+    contextMenu.AddItem(new IPopupMenu::Item("MIDI CC None", assignedCC < 0 ? IPopupMenu::Item::kChecked : IPopupMenu::Item::kNoFlags, kMidiCCNoneTag));
+    contextMenu.AddSeparator();
+
+    for (int group = 0; group < 4; ++group)
     {
-      WDL_String item;
-      item.SetFormatted(32, "MIDI CC %03d", cc);
-      contextMenu.AddItem(item.Get(), -1, cc == assignedCC ? IPopupMenu::Item::kChecked : IPopupMenu::Item::kNoFlags);
+      const int startCC = group * 32;
+      const int endCC = startCC + 31;
+      WDL_String rangeTitle;
+      rangeTitle.SetFormatted(32, "CC %03d - %03d", startCC, endCC);
+
+      IPopupMenu* pGroupSubMenu = new IPopupMenu(rangeTitle.Get());
+      for (int cc = startCC; cc <= endCC; ++cc)
+      {
+        WDL_String item;
+        item.SetFormatted(32, "CC %03d", cc);
+        pGroupSubMenu->AddItem(new IPopupMenu::Item(item.Get(), cc == assignedCC ? IPopupMenu::Item::kChecked : IPopupMenu::Item::kNoFlags, kMidiCCBaseTag + cc));
+      }
+      contextMenu.AddItem(rangeTitle.Get(), pGroupSubMenu);
     }
   }
 
-  bool HandleMidiCCContextSelection(int itemSelected, IControl* owner)
+  bool HandleMidiCCContextSelection(int itemSelected, IControl* owner, IPopupMenu* pSelectedMenu = nullptr)
   {
-    if (mMidiCCContextMenuParamIdx < 0 || mMidiCCContextMenuStartIdx < 0 || itemSelected < mMidiCCContextMenuStartIdx)
+    if (mMidiCCContextMenuParamIdx < 0 || owner == nullptr)
       return false;
 
-    const int localIndex = itemSelected - mMidiCCContextMenuStartIdx;
-    if (localIndex < 0 || localIndex > 129)
-      return false;
-
-    auto* plug = owner != nullptr ? static_cast<NeuralAmpModeler*>(owner->GetDelegate()) : nullptr;
+    auto* plug = static_cast<NeuralAmpModeler*>(owner->GetDelegate());
     if (plug == nullptr)
       return false;
 
-    if (localIndex == 0)
-      plug->StartMidiLearnForParam(mMidiCCContextMenuParamIdx);
-    else if (localIndex == 1)
-      plug->ClearMidiCCForParam(mMidiCCContextMenuParamIdx);
-    else
-      plug->AssignMidiCCToParam(mMidiCCContextMenuParamIdx, localIndex - 2);
+    int tag = -1;
+    if (pSelectedMenu && pSelectedMenu->GetChosenItem())
+    {
+      tag = pSelectedMenu->GetChosenItem()->GetTag();
+    }
 
-    mMidiCCContextMenuParamIdx = -1;
-    mMidiCCContextMenuStartIdx = -1;
-    return true;
+    if (tag < 0 && itemSelected >= 0 && mMidiCCContextMenuStartIdx >= 0 && itemSelected >= mMidiCCContextMenuStartIdx)
+    {
+      const int localIndex = itemSelected - mMidiCCContextMenuStartIdx;
+      if (localIndex == 0)
+        tag = kMidiCCLearnTag;
+      else if (localIndex == 1)
+        tag = kMidiCCNoneTag;
+    }
+
+    const int paramIdx = mMidiCCContextMenuParamIdx;
+    if (tag == kMidiCCLearnTag)
+    {
+      mMidiCCContextMenuParamIdx = -1;
+      mMidiCCContextMenuStartIdx = -1;
+      plug->StartMidiLearnForParam(paramIdx);
+      return true;
+    }
+    if (tag == kMidiCCNoneTag)
+    {
+      mMidiCCContextMenuParamIdx = -1;
+      mMidiCCContextMenuStartIdx = -1;
+      plug->ClearMidiCCForParam(paramIdx);
+      return true;
+    }
+    if (tag >= kMidiCCBaseTag && tag <= kMidiCCBaseTag + 127)
+    {
+      mMidiCCContextMenuParamIdx = -1;
+      mMidiCCContextMenuStartIdx = -1;
+      plug->AssignMidiCCToParam(paramIdx, tag - kMidiCCBaseTag);
+      return true;
+    }
+
+    return false;
   }
 
   void OpenMidiCCMenu(IControl* owner, int paramIdx)
@@ -311,38 +384,72 @@ protected:
 
     mMidiCCMenuParamIdx = paramIdx;
     mMidiCCMenu.Clear();
-    mMidiCCMenu.SetNItemsPerColumn(34);
-    mMidiCCMenu.AddItem("Learn");
+
     const int assignedCC = plug->GetMidiCCForParam(paramIdx);
-    mMidiCCMenu.AddItem("None", -1, assignedCC < 0 ? IPopupMenu::Item::kChecked : IPopupMenu::Item::kNoFlags);
-    for (int cc = 0; cc < 128; ++cc)
+    mMidiCCMenu.AddItem(new IPopupMenu::Item("Learn", IPopupMenu::Item::kNoFlags, kMidiCCLearnTag));
+    mMidiCCMenu.AddItem(new IPopupMenu::Item("None", assignedCC < 0 ? IPopupMenu::Item::kChecked : IPopupMenu::Item::kNoFlags, kMidiCCNoneTag));
+    mMidiCCMenu.AddSeparator();
+
+    for (int group = 0; group < 4; ++group)
     {
-      WDL_String item;
-      item.SetFormatted(32, "CC %03d", cc);
-      mMidiCCMenu.AddItem(item.Get(), -1, cc == assignedCC ? IPopupMenu::Item::kChecked : IPopupMenu::Item::kNoFlags);
+      const int startCC = group * 32;
+      const int endCC = startCC + 31;
+      WDL_String subMenuName;
+      subMenuName.SetFormatted(32, "CC %03d - %03d", startCC, endCC);
+
+      IPopupMenu* pSubMenu = new IPopupMenu(subMenuName.Get());
+      for (int cc = startCC; cc <= endCC; ++cc)
+      {
+        WDL_String item;
+        item.SetFormatted(32, "CC %03d", cc);
+        pSubMenu->AddItem(new IPopupMenu::Item(item.Get(), cc == assignedCC ? IPopupMenu::Item::kChecked : IPopupMenu::Item::kNoFlags, kMidiCCBaseTag + cc));
+      }
+      mMidiCCMenu.AddItem(subMenuName.Get(), pSubMenu);
     }
     owner->GetUI()->CreatePopupMenu(*owner, mMidiCCMenu, owner->GetRECT());
   }
 
   bool HandleMidiCCMenuSelection(IPopupMenu* pSelectedMenu, IControl* owner)
   {
-    if (pSelectedMenu != &mMidiCCMenu || mMidiCCMenuParamIdx < 0 || !pSelectedMenu->GetChosenItem())
+    if (owner == nullptr)
       return false;
 
-    auto* plug = owner != nullptr ? static_cast<NeuralAmpModeler*>(owner->GetDelegate()) : nullptr;
+    auto* plug = static_cast<NeuralAmpModeler*>(owner->GetDelegate());
     if (plug == nullptr)
       return false;
 
-    const int chosen = pSelectedMenu->GetChosenItemIdx();
-    if (chosen == 0)
-      plug->StartMidiLearnForParam(mMidiCCMenuParamIdx);
-    else if (chosen == 1)
-      plug->ClearMidiCCForParam(mMidiCCMenuParamIdx);
-    else if (chosen >= 2 && chosen <= 129)
-      plug->AssignMidiCCToParam(mMidiCCMenuParamIdx, chosen - 2);
+    if (mMidiCCContextMenuParamIdx >= 0)
+    {
+      const int chosenIdx = pSelectedMenu ? pSelectedMenu->GetChosenItemIdx() : -1;
+      if (HandleMidiCCContextSelection(chosenIdx, owner, pSelectedMenu))
+        return true;
+    }
 
-    mMidiCCMenuParamIdx = -1;
-    return true;
+    if (mMidiCCMenuParamIdx < 0 || pSelectedMenu == nullptr || pSelectedMenu->GetChosenItem() == nullptr)
+      return false;
+
+    const int tag = pSelectedMenu->GetChosenItem()->GetTag();
+    const int paramIdx = mMidiCCMenuParamIdx;
+    if (tag == kMidiCCLearnTag)
+    {
+      mMidiCCMenuParamIdx = -1;
+      plug->StartMidiLearnForParam(paramIdx);
+      return true;
+    }
+    if (tag == kMidiCCNoneTag)
+    {
+      mMidiCCMenuParamIdx = -1;
+      plug->ClearMidiCCForParam(paramIdx);
+      return true;
+    }
+    if (tag >= kMidiCCBaseTag && tag <= kMidiCCBaseTag + 127)
+    {
+      mMidiCCMenuParamIdx = -1;
+      plug->AssignMidiCCToParam(paramIdx, tag - kMidiCCBaseTag);
+      return true;
+    }
+
+    return false;
   }
 
   bool IsMidiLearnBadgeHit(IControl* owner, const IRECT& r, float x, float y, int paramIdx) const
@@ -590,11 +697,15 @@ public:
 
     if (pSelectedMenu && pSelectedMenu->GetChosenItem())
     {
-      const int index = pSelectedMenu->GetChosenItemIdx();
-      if (mMenuMode == MenuMode::SaveTarget)
-        PLUG()->SaveCurrentInternalPresetToSlot(index);
-      else
-        PLUG()->SelectInternalPreset(index);
+      const int tag = pSelectedMenu->GetChosenItem()->GetTag();
+      const int index = tag >= 0 ? tag : pSelectedMenu->GetChosenItemIdx();
+      if (index >= 0 && index < 128)
+      {
+        if (mMenuMode == MenuMode::SaveTarget)
+          PLUG()->SaveCurrentInternalPresetToSlot(index);
+        else
+          PLUG()->SelectInternalPreset(index);
+      }
     }
     SetDirty(false);
   }
@@ -748,17 +859,25 @@ private:
   {
     mMenuMode = saveTarget ? MenuMode::SaveTarget : MenuMode::Recall;
     mMenu.Clear();
-    mMenu.SetNItemsPerColumn(64);
+
     const int current = PLUG()->GetCurrentInternalPresetIndex();
-    for (int i = 0; i < 128; ++i)
+    for (int group = 0; group < 4; ++group)
     {
-      WDL_String item;
-      item.SetFormatted(180, "%03d  %s%s", i + 1, PLUG()->GetInternalPresetName(i),
-                        !saveTarget && i == current && PLUG()->IsCurrentInternalPresetDirty() ? " *" : "");
-      if (!saveTarget && i == current)
-        mMenu.AddItem(item.Get(), -1, IPopupMenu::Item::kChecked);
-      else
-        mMenu.AddItem(item.Get());
+      const int startIdx = group * 32;
+      const int endIdx = startIdx + 31;
+      WDL_String subMenuName;
+      subMenuName.SetFormatted(32, "%03d - %03d", startIdx + 1, endIdx + 1);
+
+      IPopupMenu* pSubMenu = new IPopupMenu(subMenuName.Get());
+      for (int i = startIdx; i <= endIdx; ++i)
+      {
+        WDL_String item;
+        item.SetFormatted(180, "%03d  %s%s", i + 1, PLUG()->GetInternalPresetName(i),
+                          !saveTarget && i == current && PLUG()->IsCurrentInternalPresetDirty() ? " *" : "");
+        const int flags = (!saveTarget && i == current) ? IPopupMenu::Item::kChecked : IPopupMenu::Item::kNoFlags;
+        pSubMenu->AddItem(new IPopupMenu::Item(item.Get(), flags, i));
+      }
+      mMenu.AddItem(subMenuName.Get(), pSubMenu);
     }
     GetUI()->CreatePopupMenu(*this, mMenu, mRECT);
   }
@@ -1320,13 +1439,14 @@ public:
   void Hide(bool hide) override
   {
     IControl::Hide(hide);
+    IDirBrowseControlBase::Hide(hide);
+    for (int c = 0; c < NChildren(); c++)
+    {
+      GetChild(c)->Hide(hide);
+    }
     if (!hide)
     {
       OnResize();
-    }
-    else
-    {
-      IDirBrowseControlBase::Hide(hide);
     }
   }
 
@@ -1349,16 +1469,42 @@ public:
     }
   }
 
+  void SetupMenu()
+  {
+    IDirBrowseControlBase::SetupMenu();
+    const int nItems = mMainMenu.NItems();
+    if (nItems <= 33)
+    {
+      mMainMenu.SetNItemsPerColumn(0);
+      return;
+    }
+
+    int numCols = 2;
+    if (nItems > 66)
+      numCols = 3;
+
+    const int itemsPerColumn = (nItems + numCols - 1) / numCols;
+    mMainMenu.SetNItemsPerColumn(itemsPerColumn);
+  }
+
   void OnResize() override
   {
     IDirBrowseControlBase::OnResize();
+    if (IsHidden())
+    {
+      for (int c = 0; c < NChildren(); c++)
+      {
+        GetChild(c)->Hide(true);
+      }
+      return;
+    }
     if (mFileNameControl != nullptr)
     {
       mFileNameControl->SetStereoFont(mIsStereoMode);
     }
     if (NChildren() >= 6)
     {
-      // Ensure main elements (Load button and Text control) are unhidden when container is active
+      // Ensure main elements (Load button and Text control) are unhidden ONLY when container is active
       GetChild(0)->Hide(false);
       GetChild(3)->Hide(false);
 
@@ -1529,6 +1675,7 @@ public:
       else
       {
         CheckSelectedItem();
+        SetupMenu();
 
         if (!mMainMenu.HasSubMenus())
         {
@@ -1616,14 +1763,15 @@ public:
           break;
         }
 
-        WDL_String fileName(pathStr.c_str()), directory(pathStr.c_str());
+        WDL_String fullPath(pathStr.c_str()), fileName(pathStr.c_str()), directory(pathStr.c_str());
+        fileName.get_filepart();
         directory.remove_filepart(true);
 
         ClearPathList();
         AddPath(directory.Get(), "");
         SetupMenu();
-        SetSelectedFile(fileName.Get());
-        mFileNameControl->SetLabelAndTooltipEllipsizing(fileName);
+        SetSelectedFile(fullPath.Get());
+        mFileNameControl->SetLabelAndTooltipEllipsizing(fileName.GetLength() ? fileName : fullPath);
         SetBrowserState(NAMBrowserState::Loaded);
       }
       break;
@@ -2821,9 +2969,13 @@ public:
     const auto realtimeThreadsArea = realtimeThreadsRow.GetFromRight(rowsArea.W() - rowLabelWidth);
     const auto offlineRadioArea = offlineOSRow.GetFromRight(rowsArea.W() - rowLabelWidth);
     const auto offlineFilterArea = offlineFilterRow.GetFromRight(rowsArea.W() - rowLabelWidth);
-    const auto infoArea = content.GetFromBottom(72.0f).GetHPadded(-8.0f).GetVShifted(2.0f);
+    const float leftMargin = 40.0f;
+    const float rightMargin = 36.0f;
+    const float btnH = 48.0f; // 1.5x
+    const float btnW = 161.0f; // 1.5x
+    const auto infoArea = IRECT(leftMargin, content.B - 68.0f, leftMargin + 250.0f, content.B + 4.0f);
     const float buttonSize = 10.0f;
-    const auto infoText = IText(12, EAlign::Center, PluginColors::HELP_TEXT);
+    const auto infoText = IText(12, EAlign::Near, PluginColors::HELP_TEXT);
     const auto infoStyle = mStyle.WithDrawFrame(false).WithValueText(infoText);
     const auto rowLabelText = IText(13, EAlign::Center, PluginColors::HELP_TEXT);
     const auto rowLabelStyle = mStyle.WithDrawFrame(false).WithValueText(rowLabelText);
@@ -2887,22 +3039,42 @@ public:
     PLUG()->GetPluginVersionStr(verStr);
     oversamplingVersionStr.SetFormatted(100, "NAM On Steroids %s", verStr.Get());
 
-    AddNamedChildControl(new IVLabelControl(infoArea.SubRectVertical(5, 0), oversamplingVersionStr.Get(), infoStyle),
+    IRECT verB, authB, gitB, ytB, shopB;
+    GetUI()->MeasureText(infoText, oversamplingVersionStr.Get(), verB);
+    GetUI()->MeasureText(infoText, "The Tone Scientist", authB);
+    GetUI()->MeasureText(infoText, "https://github.com/DLC86/NAM-Oversampler", gitB);
+    GetUI()->MeasureText(infoText, "https://youtube.com/@ToneScientist", ytB);
+    GetUI()->MeasureText(infoText, "https://shop.thetonescientist.com", shopB);
+
+    AddNamedChildControl(new IVLabelControl(infoArea.SubRectVertical(5, 0).GetFromLeft(verB.W()), oversamplingVersionStr.Get(), infoStyle),
                          mControlNames.version);
-    AddNamedChildControl(new IVLabelControl(infoArea.SubRectVertical(5, 1), "The Tone Scientist", infoStyle),
+    AddNamedChildControl(new IVLabelControl(infoArea.SubRectVertical(5, 1).GetFromLeft(authB.W()), "The Tone Scientist", infoStyle),
                          mControlNames.author);
-    AddNamedChildControl(new IURLControl(infoArea.SubRectVertical(5, 2), "https://github.com/DLC86/NAM-On-Steroids",
-                                         "https://github.com/DLC86/NAM-On-Steroids", infoText, COLOR_TRANSPARENT,
+    AddNamedChildControl(new IURLControl(infoArea.SubRectVertical(5, 2).GetFromLeft(gitB.W()), "https://github.com/DLC86/NAM-Oversampler",
+                                         "https://github.com/DLC86/NAM-Oversampler", infoText, COLOR_TRANSPARENT,
                                          PluginColors::HELP_TEXT_MO, PluginColors::HELP_TEXT_CLICKED),
                          mControlNames.github);
-    AddNamedChildControl(new IURLControl(infoArea.SubRectVertical(5, 3), "https://youtube.com/@ToneScientist",
+    AddNamedChildControl(new IURLControl(infoArea.SubRectVertical(5, 3).GetFromLeft(ytB.W()), "https://youtube.com/@ToneScientist",
                                          "https://youtube.com/@ToneScientist", infoText, COLOR_TRANSPARENT,
                                          PluginColors::HELP_TEXT_MO, PluginColors::HELP_TEXT_CLICKED),
                          mControlNames.youtube);
-    AddNamedChildControl(new IURLControl(infoArea.SubRectVertical(5, 4), "https://shop.thetonescientist.com",
+    AddNamedChildControl(new IURLControl(infoArea.SubRectVertical(5, 4).GetFromLeft(shopB.W()), "https://shop.thetonescientist.com",
                                          "https://shop.thetonescientist.com", infoText, COLOR_TRANSPARENT,
                                          PluginColors::HELP_TEXT_MO, PluginColors::HELP_TEXT_CLICKED),
                          mControlNames.shop);
+
+    const auto githubRow = infoArea.SubRectVertical(5, 2);
+    const float centerY = githubRow.MH();
+    const auto donateArea = IRECT(page.R - rightMargin - btnW, centerY - btnH * 0.5f, page.R - rightMargin, centerY + btnH * 0.5f);
+
+    const IBitmap paypalBitmap = GetUI()->LoadBitmap(PAYPAL_DONATE_FN);
+    auto donateAction = [](IControl* pCaller) {
+      pCaller->GetUI()->OpenURL("https://www.paypal.com/donate/?hosted_button_id=TERZ92DXECN28");
+    };
+    auto* donateBtn = AddNamedChildControl(
+      new NAMPayPalDonateButtonControl(donateArea, donateAction, paypalBitmap),
+      mControlNames.donate);
+    donateBtn->SetTooltip("Support development via PayPal");
 
     auto closeAction = [&](IControl* pCaller) {
       static_cast<NAMOversamplingPageControl*>(pCaller->GetParent())->HideAnimated(true);
@@ -2924,6 +3096,7 @@ private:
     const std::string author = "Author";
     const std::string bitmap = "Bitmap";
     const std::string close = "Close";
+    const std::string donate = "Donate";
     const std::string realtimeFilterLabel = "RealtimeFilterLabel";
     const std::string filterPhase = "FilterPhase";
     const std::string github = "GitHub";

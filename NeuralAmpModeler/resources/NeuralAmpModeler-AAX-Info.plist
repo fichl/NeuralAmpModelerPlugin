@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>NAM On Steroids</string>
 	<key>CFBundleGetInfoString</key>
-	<string>NAM On Steroids v2.3.1 Copyright 2022 Steven Atkinson</string>
+	<string>NAM On Steroids v2.3.2 Copyright 2022 Steven Atkinson</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.TheToneScientist.aax.NAMOnSteroids</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -17,11 +17,11 @@
 	<key>CFBundlePackageType</key>
 	<string>TDMw</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.3.1</string>
+	<string>2.3.2</string>
 	<key>CFBundleSignature</key>
 	<string>PTul</string>
 	<key>CFBundleVersion</key>
-	<string>2.3.1</string>
+	<string>2.3.2</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LSMinimumSystemVersion</key>

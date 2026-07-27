@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>NAM On Steroids</string>
 	<key>CFBundleGetInfoString</key>
-	<string>NAM On Steroids v2.3.1 Copyright 2022 Steven Atkinson</string>
+	<string>NAM On Steroids v2.3.2 Copyright 2022 Steven Atkinson</string>
 	<key>CFBundleIconFile</key>
 	<string>NeuralAmpModeler.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -19,11 +19,11 @@
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.3.1</string>
+	<string>2.3.2</string>
 	<key>CFBundleSignature</key>
 	<string>1YEo</string>
 	<key>CFBundleVersion</key>
-	<string>2.3.1</string>
+	<string>2.3.2</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LSApplicationCategoryType</key>

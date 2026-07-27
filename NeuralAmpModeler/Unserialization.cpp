@@ -51,6 +51,10 @@ void NeuralAmpModeler::_UnserializeApplyConfig(nlohmann::json& config)
     config["Phase Invert L"] = 0.0;
   if (!config.contains("Phase Invert R"))
     config["Phase Invert R"] = 0.0;
+  if (!config.contains("High Cut") && !config.contains("HighCut") && !config.contains("High Cut Frequency"))
+    config["High Cut Frequency"] = 20000.0;
+  if (!config.contains("Low Cut") && !config.contains("LowCut") && !config.contains("Low Cut Frequency"))
+    config["Low Cut Frequency"] = 20.0;
 
   auto getParamByName = [&](std::string& name) {
     // Could use a map but eh
