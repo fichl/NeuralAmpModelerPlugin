@@ -1283,6 +1283,78 @@ private:
   }
 };
 
+class NAMAutoAlignButtonControl : public IButtonControlBase
+{
+public:
+  NAMAutoAlignButtonControl(const IRECT& bounds, IActionFunction action)
+  : IButtonControlBase(bounds, action)
+  {
+    SetMouseEventsWhenDisabled(false);
+  }
+
+  void OnMouseDown(float x, float y, const IMouseMod& mod) override
+  {
+    if (IsDisabled())
+      return;
+    IButtonControlBase::OnMouseDown(x, y, mod);
+  }
+
+  void OnMouseUp(float x, float y, const IMouseMod& mod) override
+  {
+    if (IsDisabled())
+      return;
+    IButtonControlBase::OnMouseUp(x, y, mod);
+  }
+
+  void Draw(IGraphics& g) override
+  {
+    IBlend blend = GetBlend();
+    auto* plug = PLUG();
+    const auto state = plug ? plug->GetAutoAlignState() : NeuralAmpModeler::EAutoAlignState::Idle;
+
+    IColor bgColor = COLOR_BLACK;
+    IColor frameColor = plug ? plug->GetThemeColor().WithOpacity(mMouseIsOver ? 0.9f : 0.5f) : COLOR_WHITE;
+    IColor textColor = COLOR_WHITE;
+
+    const char* text = "AUTO ALIGN";
+    if (state == NeuralAmpModeler::EAutoAlignState::WaitingForSignal)
+    {
+      text = "WAITING...";
+      frameColor = PluginColors::HELP_TEXT;
+      textColor = plug ? plug->GetThemeColor() : COLOR_WHITE;
+      SetDirty(false);
+    }
+    else if (state == NeuralAmpModeler::EAutoAlignState::Listening)
+    {
+      text = "CAPTURING...";
+      bgColor = plug ? plug->GetThemeColor() : COLOR_WHITE;
+      textColor = COLOR_BLACK;
+      SetDirty(false);
+    }
+    else if (state == NeuralAmpModeler::EAutoAlignState::Processing)
+    {
+      text = "ALIGNING...";
+      bgColor = plug ? plug->GetThemeColor() : COLOR_WHITE;
+      textColor = COLOR_BLACK;
+      SetDirty(false);
+    }
+
+    if (IsDisabled())
+    {
+      bgColor = COLOR_BLACK;
+      frameColor = COLOR_DARK_GRAY;
+      textColor = COLOR_GRAY;
+    }
+
+    const float cr = 3.0f;
+    g.FillRoundRect(bgColor, mRECT, cr, &blend);
+    g.DrawRoundRect(frameColor, mRECT, cr, &blend, 1.2f);
+
+    const IText itext(9.0f, textColor, "Roboto-Regular", EAlign::Center, EVAlign::Middle);
+    g.DrawText(itext, text, mRECT, &blend);
+  }
+};
+
 class NAMFileNameControl : public IVButtonControl
 {
 public:
@@ -1974,6 +2046,7 @@ public:
     if (mTimeAlignSlider) mTimeAlignSlider->SetDisabled(isMono);
     if (mPhaseInvertLCtrl) mPhaseInvertLCtrl->SetDisabled(isMono);
     if (mPhaseInvertRCtrl) mPhaseInvertRCtrl->SetDisabled(isMono);
+    if (mAutoAlignBtn) mAutoAlignBtn->SetDisabled(isMono);
     SetDirty(false);
   }
 
@@ -2143,10 +2216,20 @@ public:
 
     const auto timeAlignArea = IRECT(centerX - 58.0f, alignTop, centerX + 58.0f, alignBottom);
 
+    const auto autoAlignArea = IRECT(centerX - 38.0f, alignTop - 18.0f, centerX + 38.0f, alignTop - 2.0f);
+    auto autoAlignAction = [](IControl* pCaller) {
+      if (pCaller && !pCaller->IsDisabled() && pCaller->GetDelegate())
+      {
+        static_cast<NeuralAmpModeler*>(pCaller->GetDelegate())->ToggleAutoAlignment();
+      }
+    };
+    mAutoAlignBtn = AddNamedChildControl(new NAMAutoAlignButtonControl(autoAlignArea, autoAlignAction), "AutoAlign", kCtrlTagAutoAlign);
+    mAutoAlignBtn->SetTooltip("Auto Align: Automatically calculates time alignment and phase inversion when audio exceeds -40 dB RMS");
+
     mTimeAlignSlider = AddNamedChildControl(
       new NAMTimeAlignSliderControl(timeAlignArea, kTimeAlign, "Time Alignment", timeAlignStyle, true, EDirection::Horizontal, DEFAULT_GEARING, 4.0f),
       "TimeAlign", kCtrlTagTimeAlign);
-    mTimeAlignSlider->SetTooltip("Time Alignment: -100 (right channel delayed 100 samples) to +100 (left channel delayed 100 samples)");
+    mTimeAlignSlider->SetTooltip("Time Alignment: -1000 (right channel delayed 1000 samples) to +1000 (left channel delayed 1000 samples)");
 
     const float buttonYCenter = timeAlignArea.T + 22.0f;
     const auto phaseLArea = IRECT(timeAlignArea.L - 26.0f, buttonYCenter - 10.0f, timeAlignArea.L - 6.0f, buttonYCenter + 10.0f);
@@ -2191,6 +2274,7 @@ private:
   IControl* mTimeAlignSlider = nullptr;
   IControl* mPhaseInvertLCtrl = nullptr;
   IControl* mPhaseInvertRCtrl = nullptr;
+  IControl* mAutoAlignBtn = nullptr;
 };
 
 struct PossiblyKnownParameter
