@@ -267,6 +267,10 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   });
   GetParam(kPhaseInvertL)->InitBool("Phase Invert L", false);
   GetParam(kPhaseInvertR)->InitBool("Phase Invert R", false);
+  GetParam(kBassFrequency)->InitDouble("BassFrequency", 150.0, 20.0, 300.0, 0.5);
+  GetParam(kMidFrequency)->InitDouble("MiddleFrequency", 425.0, 200.0, 1000.0, 0.5);
+  GetParam(kTrebFrequency)->InitDouble("TrebleFrequency", 1800.0, 800.0, 6200.0, 0.5);
+//  GetParam(kShowFrequencySliders)->InitBool("showFrquencySliders", false);
   NAMSetPhaseMulticoreRuntimeSettings(mPhaseMulticoreEnabledParam.load(), mPhaseMulticoreRequestedThreadsParam.load(), 4);
   MakeDefaultPreset("Default");
   _LoadGlobalInternalPresetBank();
@@ -309,6 +313,8 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const auto modelIconSVG = pGraphics->LoadSVG(MODEL_ICON_FN);
     const auto irIconOnSVG = pGraphics->LoadSVG(IR_ICON_ON_FN);
     const auto irIconOffSVG = pGraphics->LoadSVG(IR_ICON_OFF_FN);
+//    const auto frequencySlidersIconOnSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_ON_FN);
+//    const auto frequencySlidersIconOffSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_OFF_FN);
     const auto backgroundBitmap = pGraphics->LoadBitmap(BACKGROUND_FN, mBackgroundStates);
     const auto fileBackgroundBitmap = pGraphics->LoadBitmap(FILEBACKGROUND_FN);
     const auto inputLevelBackgroundBitmap = pGraphics->LoadBitmap(INPUTLEVELBACKGROUND_FN);
@@ -347,6 +353,12 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       inputKnobArea.GetVShifted(inputKnobArea.H()).SubRectVertical(2, 0).GetReducedFromTop(10.0f);
     const auto eqToggleArea =
       bassKnobArea.GetVShifted(bassKnobArea.H()).SubRectVertical(2, 0).GetReducedFromTop(10.0f);
+    // Area for frequency sliders
+    const auto bassSliderArea = bassKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
+    const auto midSliderArea = midKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
+    const auto trebleSliderArea = trebleKnobArea.GetFromTop(69.0f).GetMidHPadded(28.5f).GetVShifted(-43.0f);
+    const auto frequencySliderToggleArea =
+      eqToggleArea.SubRectVertical(2, 0).GetPadded(-7.f).GetVShifted(31.f).GetHShifted(49.f);
     const auto toneStackSelectorBaseArea =
       midKnobArea.GetVShifted(midKnobArea.H()).SubRectVertical(2, 0).GetReducedFromTop(10.0f);
     const auto toneStackSelectorArea =
@@ -613,6 +625,28 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     // The meters
     pGraphics->AttachControl(new NAMMeterControl(inputMeterArea, meterBackgroundBitmap, style), kCtrlTagInputMeter);
     pGraphics->AttachControl(new NAMMeterControl(outputMeterArea, meterBackgroundBitmap, style), kCtrlTagOutputMeter);
+
+    // Frequency Sliders
+    pGraphics->AttachControl(new IVSliderControl(bassSliderArea, kBassFrequency, " ",
+                                                 style.WithColor(kFG, PluginColors::OFF_WHITE)
+                                                   .WithValueText(IText(DEFAULT_TEXT_SIZE - 3.f, EVAlign::Bottom,
+                                                                        PluginColors::NAM_THEMEFONTCOLOR)),
+                                                 true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
+                             -1, "NAM_Controls_FS");
+    pGraphics->AttachControl(new IVSliderControl(midSliderArea, kMidFrequency, " ",
+                                                 style.WithColor(kFG, PluginColors::OFF_WHITE)
+                                                   .WithValueText(IText(DEFAULT_TEXT_SIZE - 3.f, EVAlign::Bottom,
+                                                                        PluginColors::NAM_THEMEFONTCOLOR)),
+                                                 true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
+                             -1, "NAM_Controls_FS");
+    pGraphics->AttachControl(new IVSliderControl(trebleSliderArea, kTrebFrequency, " ",
+                                                 style.WithColor(kFG, PluginColors::OFF_WHITE)
+                                                   .WithValueText(IText(DEFAULT_TEXT_SIZE - 3.f, EVAlign::Bottom,
+                                                                        PluginColors::NAM_THEMEFONTCOLOR)),
+                                                 true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
+                             -1, "NAM_Controls_FS");
+    //pGraphics->AttachControl(new ISVGSwitchControl(
+    //  frequencySliderToggleArea, {frequencySlidersIconOffSVG, frequencySlidersIconOnSVG}, kShowFrequencySliders));
 
     // Overlay pages (attached AFTER meters so their background bitmaps naturally cover meters instantly without delay)
     pGraphics
@@ -2491,8 +2525,24 @@ void NeuralAmpModeler::OnParamChange(int paramIdx)
     case kToneBass: mToneStack->SetParam("bass", GetParam(paramIdx)->Value()); break;
     case kToneMid: mToneStack->SetParam("middle", GetParam(paramIdx)->Value()); break;
     case kToneTreble: mToneStack->SetParam("treble", GetParam(paramIdx)->Value()); break;
-    case kToneStackType: mToneStack->SetParam("type", GetParam(paramIdx)->Value()); break;
-    case kSlim: _ApplySlimParamToLoadedNAMs(); break;
+    case kBassFrequency: mToneStack->SetParam("BassFrequency", GetParam(paramIdx)->Value()); break;
+    case kMidFrequency: mToneStack->SetParam("MiddleFrequency", GetParam(paramIdx)->Value()); break;
+    case kTrebFrequency: mToneStack->SetParam("TrebleFrequency", GetParam(paramIdx)->Value()); break;
+    case kToneStackType: mToneStack->SetParam("type", GetParam(paramIdx)->Value()); 
+#if PLUG_HAS_UI
+      if (GetParam(kToneStackType)->Int() == 0)
+      {
+        if (auto graphics = GetUI())
+          graphics->ForControlInGroup("NAM_Controls_FS", [](IControl* pControl) { pControl->Hide(false); });
+      }
+      else
+      {
+        if (auto graphics = GetUI())
+          graphics->ForControlInGroup("NAM_Controls_FS", [](IControl* pControl) { pControl->Hide(true); });
+      }
+      break;
+#endif
+    case kSlim : _ApplySlimParamToLoadedNAMs(); break;
 
     case kOversamplingFactor:
     {
@@ -2741,6 +2791,8 @@ void NeuralAmpModeler::OnParamChangeUI(int paramIdx, EParamSource source)
         break;
       case kEQActive:
         pGraphics->ForControlInGroup("EQ_KNOBS", [active](IControl* pControl) { pControl->SetDisabled(!active); });
+        pGraphics->ForControlInGroup(
+          "NAM_Controls_FS", [active](IControl* pControl) { pControl->SetDisabled(!active); });
         if (auto* p = pGraphics->GetControlWithTag(kCtrlTagEQPostNAM))
           p->SetDisabled(!active);
         updateToneStackControlAvailability();
@@ -4037,6 +4089,9 @@ void NeuralAmpModeler::_ResetToneStackToDefaults()
   toneStack->SetParam("bass", GetParam(kToneBass)->Value());
   toneStack->SetParam("middle", GetParam(kToneMid)->Value());
   toneStack->SetParam("treble", GetParam(kToneTreble)->Value());
+  toneStack->SetParam("BassFrequency", GetParam(kBassFrequency)->Value()); 
+  toneStack->SetParam("MiddleFrequency", GetParam(kMidFrequency)->Value()); 
+  toneStack->SetParam("TrebleFrequency", GetParam(kTrebFrequency)->Value()); 
   toneStack->SetParam("type", GetParam(kToneStackType)->Value());
 }
 

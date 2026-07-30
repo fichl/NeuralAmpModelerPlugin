@@ -136,6 +136,9 @@ enum EParams
   kTimeAlign,
   kPhaseInvertL,
   kPhaseInvertR,
+  kBassFrequency,
+  kMidFrequency,
+  kTrebFrequency,
   kNumParams
 };
 

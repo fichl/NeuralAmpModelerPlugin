@@ -2966,13 +2966,25 @@ void dsp::tone_stack::BasicNamToneStack::SetParam(const std::string name, const 
   {
     mBassVal = val;
   }
+  else if (name == "BassFrequency")
+  {
+    mBassFrequency = val;
+  }
   else if (name == "middle")
   {
     mMiddleVal = val;
   }
+  else if (name == "MiddleFrequency")
+  {
+    mMiddleFrequency = val;
+  }
   else if (name == "treble")
   {
     mTrebleVal = val;
+  }
+  else if (name == "TrebleFrequency")
+  {
+    mTrebFrequency = val;
   }
   else if (name == "type")
   {
@@ -3011,16 +3023,16 @@ void dsp::tone_stack::BasicNamToneStack::_RefreshClassicEQParams()
     return;
 
   const double bassGainDB = 4.0 * (mBassVal - 5.0); // +/- 20
-  recursive_linear_filter::BiquadParams bassParams(sampleRate, 150.0, 0.707, bassGainDB);
+  recursive_linear_filter::BiquadParams bassParams(sampleRate, mBassFrequency, 0.707, bassGainDB);
   mToneBass.SetParams(bassParams);
 
   const double midGainDB = 3.0 * (mMiddleVal - 5.0); // +/- 15
   const double midQuality = midGainDB < 0.0 ? 1.5 : 0.7;
-  recursive_linear_filter::BiquadParams midParams(sampleRate, 425.0, midQuality, midGainDB);
+  recursive_linear_filter::BiquadParams midParams(sampleRate, mMiddleFrequency, midQuality, midGainDB);
   mToneMid.SetParams(midParams);
 
   const double trebleGainDB = 2.0 * (mTrebleVal - 5.0); // +/- 10
-  recursive_linear_filter::BiquadParams trebleParams(sampleRate, 1800.0, 0.707, trebleGainDB);
+  recursive_linear_filter::BiquadParams trebleParams(sampleRate, mTrebFrequency, 0.707, trebleGainDB);
   mToneTreble.SetParams(trebleParams);
 }
 

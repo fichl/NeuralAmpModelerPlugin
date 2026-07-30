@@ -137,6 +137,9 @@ public:
     SetParam("bass", 5.0);
     SetParam("middle", 5.0);
     SetParam("treble", 5.0);
+    SetParam("BassFrequency", 150.0);
+    SetParam("MiddleFrequency", 425.0);
+    SetParam("TrebleFrequency", 1800.0);
   };
   ~BasicNamToneStack() = default;
 
@@ -209,6 +212,9 @@ protected:
   double mBassVal = 5.0;
   double mMiddleVal = 5.0;
   double mTrebleVal = 5.0;
+  double mBassFrequency = 150.0;
+  double mMiddleFrequency = 425.0;
+  double mTrebFrequency = 1800.0;
 };
 }; // namespace tone_stack
 }; // namespace dsp
