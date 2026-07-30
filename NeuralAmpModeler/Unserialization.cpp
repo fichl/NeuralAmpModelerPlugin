@@ -253,14 +253,6 @@ int _GetConfigFrom_2_0_1(const iplug::IByteChunk& chunk, int startPos, nlohmann:
       config["HighLightColor"] = std::string(highlightColor.Get());
       finalPos = posAfterHighlight;
     }
-
-    //double bgIndex = 0.0;
-    //const int posAfterBgIndex = chunk.Get(&bgIndex, pos);
-    //if (posAfterBgIndex >= 0)
-    //{
-    //  config["BgIndex"] = double(bgIndex);
-    //  finalPos = posAfterBgIndex;
-    //}
     return finalPos;
   }
   return pos;
@@ -738,14 +730,6 @@ int _GetConfigFrom_2_2_5(const iplug::IByteChunk& chunk, int startPos, nlohmann:
     config["HighLightColor"] = std::string(highlightColor.Get());
     pos = posAfterHighlight;
   }
-
-  //double bgIndex = 0.0;
-  //const int posAfterBgIndex = chunk.Get(&bgIndex, pos);
-  //if (posAfterBgIndex >= 0)
-  //{
-  //  config["BgIndex"] = double(bgIndex);
-  //  pos = posAfterBgIndex;
-  //}
   return pos;
 }
 
@@ -849,15 +833,7 @@ int _GetConfigFrom_2_3_0(const iplug::IByteChunk& chunk, int startPos, nlohmann:
     config["HighLightColor"] = std::string(highlightColor.Get());
     pos = posAfterHighlight;
   }
-  
-  //double bgIndex = 0.0;
-  //const int posAfterBgIndex = chunk.Get(&bgIndex, pos);
-  //if (posAfterBgIndex >= 0)
-  //{
-  //  config["BgIndex"] = double(bgIndex);
-  //  pos = posAfterBgIndex;
-  //}
-  //return pos;
+  return pos;
 }
 
 //==============================================================================
@@ -970,14 +946,6 @@ int _GetConfigFrom_2_3_1(const iplug::IByteChunk& chunk, int startPos, nlohmann:
     config["HighLightColor"] = std::string(highlightColor.Get());
     pos = posAfterHighlight;
   }
-
-  //double bgIndex = 0.0;
-  //const int posAfterBgIndex = chunk.Get(&bgIndex, pos);
-  //if (posAfterBgIndex >= 0)
-  //{
-  //  config["BgIndex"] = double(bgIndex);
-  //  pos = posAfterBgIndex;
-  //}
   return pos;
 }
 

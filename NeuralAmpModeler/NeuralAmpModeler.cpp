@@ -270,7 +270,6 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   GetParam(kBassFrequency)->InitDouble("BassFrequency", 150.0, 20.0, 300.0, 0.5);
   GetParam(kMidFrequency)->InitDouble("MiddleFrequency", 425.0, 200.0, 1000.0, 0.5);
   GetParam(kTrebFrequency)->InitDouble("TrebleFrequency", 1800.0, 800.0, 6200.0, 0.5);
-//  GetParam(kShowFrequencySliders)->InitBool("showFrquencySliders", false);
   NAMSetPhaseMulticoreRuntimeSettings(mPhaseMulticoreEnabledParam.load(), mPhaseMulticoreRequestedThreadsParam.load(), 4);
   MakeDefaultPreset("Default");
   _LoadGlobalInternalPresetBank();
@@ -313,8 +312,6 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const auto modelIconSVG = pGraphics->LoadSVG(MODEL_ICON_FN);
     const auto irIconOnSVG = pGraphics->LoadSVG(IR_ICON_ON_FN);
     const auto irIconOffSVG = pGraphics->LoadSVG(IR_ICON_OFF_FN);
-//    const auto frequencySlidersIconOnSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_ON_FN);
-//    const auto frequencySlidersIconOffSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_OFF_FN);
     const auto backgroundBitmap = pGraphics->LoadBitmap(BACKGROUND_FN, mBackgroundStates);
     const auto fileBackgroundBitmap = pGraphics->LoadBitmap(FILEBACKGROUND_FN);
     const auto inputLevelBackgroundBitmap = pGraphics->LoadBitmap(INPUTLEVELBACKGROUND_FN);
@@ -477,7 +474,6 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       }
     };
 
-    //pGraphics->AttachBackground(BACKGROUND_FN);
     pGraphics->AttachControl(new IBitmapControl(b, backgroundBitmap), -1, "NAM_BgImage");
     pGraphics->AttachControl(new IBitmapControl(b, linesBitmap));
     pGraphics->AttachControl(new IVLabelControl(titleArea, "NAM ON STEROIDS", titleStyle));
@@ -645,8 +641,6 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
                                                                         PluginColors::NAM_THEMEFONTCOLOR)),
                                                  true, EDirection::Horizontal, DEFAULT_GEARING, 4.f),
                              -1, "NAM_Controls_FS");
-    //pGraphics->AttachControl(new ISVGSwitchControl(
-    //  frequencySliderToggleArea, {frequencySlidersIconOffSVG, frequencySlidersIconOnSVG}, kShowFrequencySliders));
 
     // Overlay pages (attached AFTER meters so their background bitmaps naturally cover meters instantly without delay)
     pGraphics
