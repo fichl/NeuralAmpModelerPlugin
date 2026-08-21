@@ -25,6 +25,12 @@ enum class NAMBrowserState
   Loaded // when file loaded, show "Clear" button
 };
 
+enum class NAMFileLoadSource
+{
+  ExistingBrowserSelection,
+  FilePickerSelection
+};
+
 // Where the corner button on the plugin (settings, close settings) goes
 // :param rect: Rect for the whole plugin's UI
 IRECT CornerButtonArea(const IRECT& rect)
@@ -243,7 +249,9 @@ public:
       bounds,
       [url](IControl* pCaller) {
         WDL_String fullURL(url);
-        pCaller->GetUI()->OpenURL(fullURL.Get());
+        auto* ui = pCaller->GetUI();
+        ui->ReleaseMouseCapture();
+        ui->OpenURL(fullURL.Get());
       },
       globeSVG, true)
   {
@@ -287,7 +295,7 @@ public:
       if (pItem)
       {
         mSelectedItemIndex = mItems.Find(pItem);
-        LoadFileAtCurrentIndex();
+        LoadFileAtCurrentIndex(NAMFileLoadSource::ExistingBrowserSelection);
       }
     }
   }
@@ -303,7 +311,7 @@ public:
       if (mSelectedItemIndex < 0)
         mSelectedItemIndex = nItems - 1;
 
-      LoadFileAtCurrentIndex();
+      LoadFileAtCurrentIndex(NAMFileLoadSource::ExistingBrowserSelection);
     };
 
     auto nextFileFunc = [&](IControl* pCaller) {
@@ -315,7 +323,7 @@ public:
       if (mSelectedItemIndex >= nItems)
         mSelectedItemIndex = 0;
 
-      LoadFileAtCurrentIndex();
+      LoadFileAtCurrentIndex(NAMFileLoadSource::ExistingBrowserSelection);
     };
 
     auto loadFileFunc = [&](IControl* pCaller) {
@@ -330,7 +338,7 @@ public:
           AddPath(path.Get(), "");
           SetupMenu();
           SelectFirstFile();
-          LoadFileAtCurrentIndex();
+          LoadFileAtCurrentIndex(NAMFileLoadSource::ExistingBrowserSelection);
         }
       });
 #else
@@ -342,7 +350,7 @@ public:
             AddPath(path.Get(), "");
             SetupMenu();
             SetSelectedFile(fileName.Get());
-            LoadFileAtCurrentIndex();
+            LoadFileAtCurrentIndex(NAMFileLoadSource::FilePickerSelection, &fileName, &path);
           }
         });
 #endif
@@ -402,15 +410,26 @@ public:
     SetBrowserState(NAMBrowserState::Empty);
   }
 
-  void LoadFileAtCurrentIndex()
+  void LoadFileAtCurrentIndex(NAMFileLoadSource source, const WDL_String* filePickerFileName = nullptr,
+                              const WDL_String* filePickerPath = nullptr)
   {
-    if (mSelectedItemIndex > -1 && mSelectedItemIndex < NItems())
+    if (source == NAMFileLoadSource::FilePickerSelection && mSelectedItemIndex == -1 && filePickerFileName != nullptr
+        && filePickerPath != nullptr)
     {
-      WDL_String fileName, path;
-      GetSelectedFile(fileName);
-      mFileNameControl->SetLabelAndTooltipEllipsizing(fileName);
-      mCompletionHandlerFunc(fileName, path);
+      ReportDirectoryScanFailure(*filePickerFileName, *filePickerPath);
+      return;
     }
+
+    if (mSelectedItemIndex < 0 || mSelectedItemIndex >= NItems())
+    {
+      ReportUnexpectedLoadFailure(source, filePickerFileName);
+      return;
+    }
+
+    WDL_String fileName, path;
+    GetSelectedFile(fileName);
+    mFileNameControl->SetLabelAndTooltipEllipsizing(fileName);
+    mCompletionHandlerFunc(fileName, path);
   }
 
   void OnMsgFromDelegate(int msgTag, int dataSize, const void* pData) override
@@ -446,6 +465,39 @@ public:
   }
 
 private:
+  void ReportDirectoryScanFailure(const WDL_String& fileName, const WDL_String& path)
+  {
+    mFileNameControl->SetLabelAndTooltipEllipsizing(fileName);
+    const std::string label = std::string("(FAILED) ") + mFileNameControl->GetLabelStr();
+
+    std::stringstream message;
+    message << "The selected file '" << fileName.Get() << "' was not found after scanning directory '" << path.Get()
+            << "'. The host may not have granted permission to enumerate that directory.";
+
+    mFileNameControl->SetLabelStr(label.c_str());
+    mFileNameControl->SetTooltip(message.str().c_str());
+    SetBrowserState(NAMBrowserState::Empty);
+    std::fprintf(stderr, "NAM: File picker selection produced index -1. %s\n", message.str().c_str());
+  }
+
+  void ReportUnexpectedLoadFailure(NAMFileLoadSource source, const WDL_String* filePickerFileName)
+  {
+    if (filePickerFileName != nullptr)
+      mFileNameControl->SetLabelAndTooltipEllipsizing(*filePickerFileName);
+
+    const std::string label = std::string("(FAILED) ") + mFileNameControl->GetLabelStr();
+    const std::string message =
+      "The selected file could not be loaded because the file browser encountered an "
+      "unexpected selection state. Please select the file again.";
+
+    mFileNameControl->SetLabelStr(label.c_str());
+    mFileNameControl->SetTooltip(message.c_str());
+    SetBrowserState(NAMBrowserState::Empty);
+    std::fprintf(stderr, "NAM: %s Source: %s; selected index: %d; item count: %d.\n", message.c_str(),
+                 source == NAMFileLoadSource::FilePickerSelection ? "file picker" : "existing browser selection",
+                 mSelectedItemIndex, NItems());
+  }
+
   void SelectFirstFile() { mSelectedItemIndex = mFiles.GetSize() ? 0 : -1; }
 
   void GetSelectedFileDirectory(WDL_String& path)
@@ -931,7 +983,7 @@ private:
                                       "https://github.com/fichl/NeuralAmpModelerPlugin/tree/playground_v2", mText, COLOR_TRANSPARENT,
                                       PluginColors::HELP_TEXT_MO, PluginColors::HELP_TEXT_CLICKED));
       AddChildControl(new IVLabelControl(GetRECT().SubRectVertical(5, 1), "By Steven Atkinson - unofficial mod by fichl", mStyle));
-      AddChildControl(new IVLabelControl(GetRECT().SubRectVertical(5, 2), "Version v0.7.15.1 x86-64 VST3" /*buildInfoStr.Get()*/, mStyle));
+      AddChildControl(new IVLabelControl(GetRECT().SubRectVertical(5, 2), buildInfoStr.Get(), mStyle));
       AddChildControl(new IURLControl(GetRECT().SubRectVertical(5, 3),
                                       "Plug-in development: Steve Atkinson, Oli Larkin, ... ",
                                       "https://github.com/sdatkinson/NeuralAmpModelerPlugin/graphs/contributors", mText,
