@@ -216,6 +216,9 @@ public:
   void OnParamChangeUI(int paramIdx, iplug::EParamSource source) override;
   bool OnMessage(int msgTag, int ctrlTag, int dataSize, const void* pData) override;
   iplug::igraphics::IColor GetThemeColor() const;
+  int GetBackgroundStates() const;
+  double GetActiveBackground() const;
+  void SetActiveBackground(const double& d);
   void SetThemeColor(const iplug::igraphics::IColor& color);
 
 private:
@@ -330,6 +333,8 @@ private:
 
   WDL_String mHighLightColor{PluginColors::NAM_THEMECOLOR.ToColorCode()};
   iplug::igraphics::IColor mThemeColor;
+  double mSelectedBackground = 0;
+  int mBackgroundStates;
 
   std::unordered_map<std::string, double> mNAMParams = {{"Input", 0.0}, {"Output", 0.0}};
 

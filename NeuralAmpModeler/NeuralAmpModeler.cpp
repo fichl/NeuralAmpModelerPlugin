@@ -103,6 +103,8 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
   GetParam(kSlim)->InitDouble("Slim", 0.0, 0.0, 1.0, 0.01);
 
   mNoiseGateTrigger.AddListener(&mNoiseGateGain);
+  mBackgroundStates = 6;
+  mSelectedBackground = 0;
 
   mMakeGraphicsFunc = [&]() {
 
@@ -128,6 +130,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const auto gearSVG = pGraphics->LoadSVG(GEAR_FN);
     const auto fileSVG = pGraphics->LoadSVG(FILE_FN);
     const auto globeSVG = pGraphics->LoadSVG(GLOBE_ICON_FN);
+    const auto bgSVG = pGraphics->LoadSVG(BG_ICON_FN);
     const auto crossSVG = pGraphics->LoadSVG(CLOSE_BUTTON_FN);
     const auto rightArrowSVG = pGraphics->LoadSVG(RIGHT_ARROW_FN);
     const auto leftArrowSVG = pGraphics->LoadSVG(LEFT_ARROW_FN);
@@ -137,7 +140,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
     const auto frequencySlidersIconOnSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_ON_FN);
     const auto frequencySlidersIconOffSVG = pGraphics->LoadSVG(FREQUENCYSLIDERS_ICON_OFF_FN);
 
-    const auto backgroundBitmap = pGraphics->LoadBitmap(BACKGROUND_FN);
+    const auto backgroundBitmap = pGraphics->LoadBitmap(BACKGROUND_FN, mBackgroundStates);
     const auto fileBackgroundBitmap = pGraphics->LoadBitmap(FILEBACKGROUND_FN);
     const auto inputLevelBackgroundBitmap = pGraphics->LoadBitmap(INPUTLEVELBACKGROUND_FN);
     const auto linesBitmap = pGraphics->LoadBitmap(LINES_FN);
@@ -195,6 +198,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
     // Misc Areas
     const auto settingsButtonArea = CornerButtonArea(b);
+    const auto bgimageButtonArea = settingsButtonArea.GetTranslated(-34.0f, 0.0f).GetCentredInside(16, 16);
 
     // Model loader button
     auto loadModelCompletionHandler = [&](const WDL_String& fileName, const WDL_String& path) {
@@ -230,7 +234,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       }
     };
 
-    pGraphics->AttachBackground(BACKGROUND_FN);
+    pGraphics->AttachControl(new IBitmapControl(b, backgroundBitmap), -1, "NAM_BgImage");
     pGraphics->AttachControl(new IBitmapControl(b, linesBitmap));
     pGraphics->AttachControl(new IVLabelControl(titleArea, "NEURAL AMP MODELER", titleStyle));
     pGraphics->AttachControl(new ISVGControl(modelIconArea, modelIconSVG));
@@ -315,6 +319,17 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
       },
       gearSVG));
 
+    auto nextBG = [&](IControl* pCaller) {
+      int s = GetBackgroundStates();
+      double step = 1.0 / (s - 1);
+      double d = GetActiveBackground() + step;
+      if (d > 1.0)
+        d = 0.0;
+      SetActiveBackground(d);
+      _ApplyThemeColorToUI(true);
+    };
+    pGraphics->AttachControl(new NAMCircleButtonControl(bgimageButtonArea, nextBG, bgSVG));
+
     pGraphics
       ->AttachControl(new NAMSettingsPageControl(b, backgroundBitmap, inputLevelBackgroundBitmap, switchHandleBitmap,
                                                  crossSVG, style, radioButtonStyle),
@@ -333,7 +348,7 @@ NeuralAmpModeler::NeuralAmpModeler(const InstanceInfo& info)
 
 NeuralAmpModeler::~NeuralAmpModeler()
 {
-  _DeallocateIOPointers();
+    _DeallocateIOPointers(); 
 }
 
 void NeuralAmpModeler::ProcessBlock(iplug::sample** inputs, iplug::sample** outputs, int nFrames)
@@ -438,6 +453,15 @@ bool NAMColorsEqual(const IColor& lhs, const IColor& rhs)
 { return lhs.A == rhs.A && lhs.R == rhs.R && lhs.G == rhs.G && lhs.B == rhs.B; }
 } // namespace
 
+int NeuralAmpModeler::GetBackgroundStates() const
+{ return mBackgroundStates; }
+
+double NeuralAmpModeler::GetActiveBackground() const
+{ return mSelectedBackground; }
+
+void NeuralAmpModeler::SetActiveBackground(const double& d)
+{ mSelectedBackground = d; }
+
 IColor NeuralAmpModeler::GetThemeColor() const
 { return mThemeColor; }
 
@@ -495,7 +519,7 @@ void NeuralAmpModeler::_ApplyThemeColorToUI(bool force)
       pVectorBase->SetColor(kOFF, themeColor.WithOpacity(0.1f));
     }
   });
-
+  ui->ForControlInGroup("NAM_BgImage", [this](IControl* pControl) { pControl->SetValue(GetActiveBackground()); });
   ui->SetAllControlsDirty();
 }
 
@@ -542,6 +566,8 @@ bool NeuralAmpModeler::SerializeState(IByteChunk& chunk) const
   chunk.PutStr(mNAMPath.Get());
   chunk.PutStr(mIRPath.Get());
   chunk.PutStr(mHighLightColor.Get());
+  double bgIndex = GetActiveBackground();
+  chunk.Put(&bgIndex);
   return SerializeParams(chunk);
 }
 

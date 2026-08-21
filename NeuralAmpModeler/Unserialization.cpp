@@ -57,6 +57,9 @@ void NeuralAmpModeler::_UnserializeApplyConfig(nlohmann::json& config)
   mNAMPath.Set(static_cast<std::string>(config["NAMPath"]).c_str());
   mIRPath.Set(static_cast<std::string>(config["IRPath"]).c_str());
   mHighLightColor.Set(static_cast<std::string>(config["HighLightColor"]).c_str());
+  if (!config.contains("BgIndex"))
+    config["BgIndex"] = 0.0;
+  SetActiveBackground(config["BgIndex"]);
 
   if (mNAMPath.GetLength())
   {
@@ -80,6 +83,9 @@ int _UnserializePathsAndExpectedKeys(const iplug::IByteChunk& chunk, int startPo
   config["IRPath"] = std::string(path.Get());
   pos = chunk.GetStr(path, pos);
   config["HighLightColor"] = std::string(path.Get());
+  double bgIndex = 0.0;
+  pos = chunk.Get(&bgIndex, pos);
+  config["BgIndex"] = double(bgIndex);
 
   for (auto it = paramNames.begin(); it != paramNames.end(); ++it)
   {
@@ -104,7 +110,7 @@ void _RenameKeys(nlohmann::json& j, std::unordered_map<std::string, std::string>
 
 void _UpdateConfigFrom_0_7_14(nlohmann::json& config)
 {
-  // Fill me in once something changes!
+   config["BgIndex"] = 0.0;
 }
 
 int _GetConfigFrom_0_7_14(const iplug::IByteChunk& chunk, int startPos, nlohmann::json& config)
@@ -125,7 +131,7 @@ int _GetConfigFrom_0_7_14(const iplug::IByteChunk& chunk, int startPos, nlohmann
                                       "MiddleFrequency",
                                       "TrebleFrequency",
                                       "showFrquencySliders",
-                                      "followTrackColor"
+                                      "followTrackColor",
                                       "Slim"};
 
   int pos = _UnserializePathsAndExpectedKeys(chunk, startPos, config, paramNames);

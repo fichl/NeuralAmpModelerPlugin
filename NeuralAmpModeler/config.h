@@ -60,6 +60,7 @@
 #define MICHROMA_FN "Michroma-Regular.ttf"
 
 #define GEAR_FN "Gear.svg"
+#define BG_ICON_FN "BgImage.svg"
 #define FILE_FN "File.svg"
 #define CLOSE_BUTTON_FN "Cross.svg"
 #define LEFT_ARROW_FN "ArrowLeft.svg"
